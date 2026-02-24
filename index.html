@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlumberBot Demo</title>
+  <!-- Google font for cursive background -->
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000000; /* black background */
+      overflow: hidden;
+      position: relative;
+    }
+
+    
+
+
+    .chat-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.chat-container::before {
+  content: "Jackson's Bot";
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Great Vibes', cursive;
+  font-size: 25px;
+  color: rgb(0, 38, 255);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent;  /* key change */
+  position: relative;
+  z-index: 1;
+}
+
+    .message {
+      padding: 10px 15px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .user {
+      background: #1100ff;
+      color: #ffffff;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
+    }
+
+    .bot {
+      background: #474747;
+      color: #ffffff;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
+    }
+
+    .input-container {
+      display: flex;
+      border-top: 1px solid #000000;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.9); /* match chat container transparency */
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 3px solid #1100ff;
+      outline: none;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: #1100ff;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #1100ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div id="chat"></div>
+    <div class="input-container">
+      <input id="input" placeholder="Ask Personal Bot..." />
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    async function send() {
+      const input = document.getElementById("input");
+      const message = input.value;
+      if (!message) return;
+
+      const chat = document.getElementById("chat");
+
+      // Show user message
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.innerText = message;
+      chat.appendChild(userMsg);
+      chat.scrollTop = chat.scrollHeight;
+
+      // Send to backend
+      try {
+        const res = await fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json();
+
+        // Show bot response
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.innerText = data.reply;
+        chat.appendChild(botMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+      } catch (err) {
+        const errorMsg = document.createElement("div");
+        errorMsg.className = "message bot";
+        errorMsg.innerText = "PlumberBot is having trouble. Try again.";
+        chat.appendChild(errorMsg);
+        chat.scrollTop = chat.scrollHeight;
+        console.error(err);
+      }
+
+      input.value = "";
+      input.focus();
+    }
+  </script>
+</body>
+</html>
