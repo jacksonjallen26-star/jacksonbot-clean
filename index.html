@@ -133,11 +133,11 @@
 
       // Send to backend
       try {
-        const res = await fetch("http://localhost:3000/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
-        });
+        const res = await fetch("/chat", {  // relative path works if frontend is served from same service
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message })
+});
 
         const data = await res.json();
 
