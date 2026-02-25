@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>PlumberBot Demo</title>
-  <!-- Google font for cursive background -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Google font for cursive title -->
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 
   <style>
+    /* --- Page & Body --- */
     body, html {
       height: 100%;
       margin: 0;
@@ -13,51 +17,51 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #ffffff; /* black background */
+      background: #5e5e5e; /* page background */
       overflow: hidden;
       position: relative;
     }
 
-    
-
-
+    /* --- Chat Container --- */
     .chat-container {
-  width: 50vw;
-  height: 92vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: #000000;   /* dark gray box behind chat */
-  border-radius: 20px;    /* rounded edges */
-  box-shadow: 0 0 20px rgb(0, 17, 255); /* optional shadow */
-  padding: 10px;          /* padding so messages don’t touch edges */
-}
+      width: 50vw;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #000000;   /* dark box behind chat */
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgb(0, 17, 255);
+      padding: 10px;
+    }
 
-.chat-container::before {
-  content: "Jackson's Bot";
-  position: absolute;
-  top: 3%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-family: 'Great Vibes', cursive;
-  font-size: 25px;
-  color: rgb(0, 38, 255);
-  opacity: 1;
-  pointer-events: none;
-  z-index: 0;
-}
+    /* Title overlay */
+    .chat-container::before {
+      content: "Jackson's Bot";
+      position: absolute;
+      top: 3%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Great Vibes', cursive;
+      font-size: 25px;
+      color: rgb(0, 38, 255);
+      opacity: 1;
+      pointer-events: none;
+      z-index: 2;
+    }
 
-#chat {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: transparent;  /* key change */
-  position: relative;
-  z-index: 1;
-}
+    /* --- Chat Messages --- */
+    #chat {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: transparent;
+      position: relative;
+      z-index: 1;
+    }
 
     .message {
       padding: 10px 15px;
@@ -80,11 +84,14 @@
       border-bottom-left-radius: 0;
     }
 
+    /* --- Input Area --- */
     .input-container {
       display: flex;
       border-top: 1px solid #000000;
       padding: 10px;
-      background: rgb(0, 0, 0); /* match chat container transparency */
+      background: #000000;
+      border-radius: 0 0 20px 20px;
+      gap: 8px;
     }
 
     #input {
@@ -96,7 +103,6 @@
     }
 
     button {
-      margin-left: 10px;
       padding: 10px 20px;
       border-radius: 20px;
       border: none;
@@ -107,50 +113,80 @@
     }
 
     button:hover {
-      background: #1100ff;
-      @media screen and (max-width: 600px) {
-  .chat-container {
-    width: 95vw;       /* almost full width on phones */
-    height: 90vh;      /* taller chat */
-  }
+      background: #0a00cc;
+    }
 
-  .chat-container::before {
-    font-size: 18px;   /* smaller title */
-    top: 2%;
-  }
+    /* --- Spinner --- */
+    #spinner {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-  #chat {
-    padding: 10px;     /* smaller padding */
-  }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #1100ff;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      animation: spin 1s linear infinite;
+    }
 
-  .message {
-    max-width: 95%;    /* messages fill more of screen */
-    padding: 8px 12px;
-    font-size: 14px;
-  }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
-  .input-container {
-    flex-direction: column;  /* stack input and button */
-    padding: 8px;
-  }
+    /* --- Responsive Mobile --- */
+    @media screen and (max-width: 600px) {
+      .chat-container {
+        width: 95vw;
+        height: 90vh;
+      }
 
-  #input {
-    width: 100%;        /* full width input */
-    margin-bottom: 8px; /* space before button */
-  }
+      .chat-container::before {
+        font-size: 18px;
+        top: 2%;
+      }
 
-  button {
-    width: 100%;        /* full width button */
-    margin-left: 0;
-  }
-}
+      #chat {
+        padding: 10px;
+      }
+
+      .message {
+        max-width: 95%;
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+
+      .input-container {
+        flex-direction: column;
+        padding: 8px;
+      }
+
+      #input {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      button {
+        width: 100%;
+        margin-left: 0;
+      }
     }
   </style>
 </head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <body>
   <div class="chat-container">
     <div id="chat"></div>
+
+    <!-- Spinner -->
+    <div id="spinner">
+      <div class="loader"></div>
+    </div>
+
     <div class="input-container">
       <input id="input" placeholder="Ask Personal Bot..." />
       <button onclick="send()">Send</button>
@@ -160,7 +196,7 @@
   <script>
     async function send() {
       const input = document.getElementById("input");
-      const message = input.value;
+      const message = input.value.trim();
       if (!message) return;
 
       const chat = document.getElementById("chat");
@@ -172,15 +208,20 @@
       chat.appendChild(userMsg);
       chat.scrollTop = chat.scrollHeight;
 
-      // Send to backend
-      try {
-        const res = await fetch("/chat", {  // relative path works if frontend is served from same service
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ message })
-});
+      // Show spinner
+      const spinner = document.getElementById("spinner");
+      spinner.style.display = "flex";
 
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
         const data = await res.json();
+
+        // Hide spinner
+        spinner.style.display = "none";
 
         // Show bot response
         const botMsg = document.createElement("div");
@@ -190,6 +231,8 @@
         chat.scrollTop = chat.scrollHeight;
 
       } catch (err) {
+        spinner.style.display = "none";
+
         const errorMsg = document.createElement("div");
         errorMsg.className = "message bot";
         errorMsg.innerText = "PlumberBot is having trouble. Try again.";
