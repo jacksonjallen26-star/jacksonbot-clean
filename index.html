@@ -143,36 +143,7 @@
     }
   </style>
 </head>
-@media screen and (max-width: 600px) {
-  .chat-container {
-    width: 95vw;          /* almost full width of phone */
-    height: 90vh;         /* taller chat */
-    margin: 0 auto;       /* center horizontally */
-    flex: none;           /* remove any flex grow/shrink */
-  }
 
-  body, html {
-    justify-content: flex-start;  /* top of screen */
-    align-items: flex-start;      /* align to top left */
-    padding: 10px;                /* small padding so chat isn’t flush to edges */
-  }
-
-  #input, button {
-    font-size: 16px;   /* prevents mobile zoom */
-    width: 100%;       /* full width input/button */
-    height: 45px;      /* taller for touch */
-  }
-
-  .input-container {
-    flex-direction: column; /* stack input & button */
-    gap: 8px;
-  }
-
-  .message {
-    max-width: 95%;    /* messages fill more of screen */
-    font-size: 14px;
-  }
-}
 <body>
   <div class="chat-container">
     <div id="chat"></div>
