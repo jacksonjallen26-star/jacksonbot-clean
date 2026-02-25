@@ -1,16 +1,15 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>PlumberBot Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google font for cursive title -->
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 
   <style>
-    /* --- Page & Body --- */
-    body, html {
+    /* --- Page --- */
+    html, body {
       height: 100%;
       margin: 0;
       font-family: Arial, sans-serif;
@@ -18,51 +17,54 @@
       justify-content: center;
       align-items: center;
       background: #000000;
-      overflow: hidden;
-      padding: 10px; /* extra space so glow isn't cut off */
+    }
+
+    /* --- Neon Border Wrapper --- */
+    .neon-wrapper {
+      padding: 5px; /* thickness of neon border */
+      border-radius: 25px;
+      background: linear-gradient(45deg, #00e1ff, #003cff, #00e1ff);
+      background-size: 300% 300%;
+      animation: neon-move 2s linear infinite;
+    }
+
+    @keyframes neon-move {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
 
     /* --- Chat Container --- */
     .chat-container {
       width: 50vw;
-      height: 93vh;
+      height: 90vh;
       display: flex;
       flex-direction: column;
-      position: relative;
       background: #303030;
-      opacity: 0.8;
-      border-radius: 20px;
-      padding: 10px;
-
-      /* Smooth 360° neon glow */
-      box-shadow: 0 0 30px #318bff, 0 0 60px #08b9ff;
-      animation: pulse-glow 2s infinite;
+      border-radius: 22px;
+      padding: 15px;
+      box-sizing: border-box;
     }
 
-    /* Title overlay */
+    /* Title */
     .chat-container::before {
       content: "Jackson's Bot";
       position: absolute;
-      top: 3%;
+      top: 5px;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       font-family: 'Great Vibes', cursive;
-      font-size: 25px;
+      font-size: 26px;
       color: #00c3ff;
-      pointer-events: none;
-      z-index: 2;
     }
 
-    /* --- Chat Messages --- */
+    /* --- Messages --- */
     #chat {
       flex: 1;
-      padding: 20px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      background: transparent;
-      z-index: 1;
+      padding: 10px;
     }
 
     .message {
@@ -74,14 +76,14 @@
 
     .user {
       background: #00c3ff;
-      color: #ffffff;
+      color: white;
       align-self: flex-end;
       border-bottom-right-radius: 0;
     }
 
     .bot {
       background: #707070;
-      color: #ffffff;
+      color: white;
       align-self: flex-start;
       border-bottom-left-radius: 0;
     }
@@ -90,8 +92,7 @@
     #spinner {
       display: none;
       justify-content: center;
-      align-items: center;
-      margin-bottom: 10px;
+      margin: 10px 0;
     }
 
     .loader {
@@ -108,22 +109,20 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* --- Input Area --- */
+    /* --- Input --- */
     .input-container {
       display: flex;
-      border-top: 1px solid #333333;
-      padding: 10px;
-      background: #303030;
-      border-radius: 0 0 20px 20px;
       gap: 8px;
+      padding-top: 10px;
     }
 
     #input {
       flex: 1;
       padding: 10px;
       border-radius: 20px;
-      border: 3px solid #00c3ff;
+      border: 2px solid #00c3ff;
       outline: none;
+      font-size: 16px;
     }
 
     button {
@@ -131,85 +130,56 @@
       border-radius: 20px;
       border: none;
       background: #00c3ff;
-      color: #ffffff;
-      cursor: pointer;
+      color: white;
       font-weight: bold;
+      cursor: pointer;
     }
 
     button:hover {
-      background: #0a00cc;
+      background: #008cff;
     }
 
-    /* --- Pulse animation for glow --- */
-    @keyframes pulse-glow {
-      0%   { box-shadow: 0 0 30px #02e1ff, 0 0 60px #02e1ff; }
-      50%  { box-shadow: 0 0 50px #038eff, 0 0 100px #0268ee; }
-      100% { box-shadow: 0 0 30px #02e1ff, 0 0 60px #02e1ff; }
-    }
-
-    /* --- Responsive Mobile --- */
+    /* --- Mobile --- */
     @media screen and (max-width: 600px) {
       .chat-container {
-  width: 50vw;
-  height: 93vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: #303030;
-  opacity: 0.8;
-  border-radius: 20px;
-  padding: 10px;
-  margin: auto; /* centers properly */
-
-  box-shadow: 0 0 30px #318bff, 0 0 60px #08b9ff;
-  animation: pulse-glow 2s infinite;
-}
-
-      .chat-container::before {
-        font-size: 18px;
-        top: 2%;
-      }
-
-      #chat {
-        padding: 10px;
+        width: 95vw;
+        height: 85vh;
       }
 
       .message {
         max-width: 95%;
-        padding: 8px 12px;
         font-size: 14px;
       }
 
       .input-container {
         flex-direction: column;
-        padding: 8px;
       }
 
       #input {
         width: 100%;
-        margin-bottom: 8px;
       }
 
       button {
         width: 100%;
-        margin-left: 0;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="chat-container">
-    <div id="chat"></div>
 
-    <!-- Spinner -->
-    <div id="spinner">
-      <div class="loader"></div>
-    </div>
+  <div class="neon-wrapper">
+    <div class="chat-container">
+      <div id="chat"></div>
 
-    <div class="input-container">
-      <input id="input" placeholder="Ask Personal Bot..." />
-      <button onclick="send()">Send</button>
+      <div id="spinner">
+        <div class="loader"></div>
+      </div>
+
+      <div class="input-container">
+        <input id="input" placeholder="Ask Personal Bot..." />
+        <button onclick="send()">Send</button>
+      </div>
     </div>
   </div>
 
@@ -221,14 +191,12 @@
 
       const chat = document.getElementById("chat");
 
-      // Show user message
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
       userMsg.innerText = message;
       chat.appendChild(userMsg);
       chat.scrollTop = chat.scrollHeight;
 
-      // Show spinner
       const spinner = document.getElementById("spinner");
       spinner.style.display = "flex";
 
@@ -238,12 +206,11 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message })
         });
+
         const data = await res.json();
 
-        // Hide spinner
         spinner.style.display = "none";
 
-        // Show bot response
         const botMsg = document.createElement("div");
         botMsg.className = "message bot";
         botMsg.innerText = data.reply;
@@ -257,13 +224,12 @@
         errorMsg.className = "message bot";
         errorMsg.innerText = "PlumberBot is having trouble. Try again.";
         chat.appendChild(errorMsg);
-        chat.scrollTop = chat.scrollHeight;
-        console.error(err);
       }
 
       input.value = "";
       input.focus();
     }
   </script>
+
 </body>
 </html>
