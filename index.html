@@ -150,9 +150,20 @@
     /* --- Responsive Mobile --- */
     @media screen and (max-width: 600px) {
       .chat-container {
-        width: 95vw;
-        height: 85vh;
-      }
+  width: 50vw;
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #303030;
+  opacity: 0.8;
+  border-radius: 20px;
+  padding: 10px;
+  margin: auto; /* centers properly */
+
+  box-shadow: 0 0 30px #318bff, 0 0 60px #08b9ff;
+  animation: pulse-glow 2s infinite;
+}
 
       .chat-container::before {
         font-size: 18px;
