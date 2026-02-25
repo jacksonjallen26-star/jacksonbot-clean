@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>PlumberBot Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
+
   <!-- Google font for cursive title -->
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 
@@ -17,9 +17,9 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #5e5e5e; /* page background */
+      background: #000000;
       overflow: hidden;
-      position: relative;
+      padding: 10px; /* extra space so glow isn't cut off */
     }
 
     /* --- Chat Container --- */
@@ -29,10 +29,14 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      background: #000000;   /* dark box behind chat */
+      background: #303030;
+      opacity: 0.8;
       border-radius: 20px;
-      box-shadow: 0 0 20px rgb(0, 17, 255);
       padding: 10px;
+
+      /* Smooth 360° neon glow */
+      box-shadow: 0 0 30px #318bff, 0 0 60px #08b9ff;
+      animation: pulse-glow 2s infinite;
     }
 
     /* Title overlay */
@@ -44,8 +48,7 @@
       transform: translate(-50%, -50%);
       font-family: 'Great Vibes', cursive;
       font-size: 25px;
-      color: rgb(0, 38, 255);
-      opacity: 1;
+      color: #00c3ff;
       pointer-events: none;
       z-index: 2;
     }
@@ -59,7 +62,6 @@
       flex-direction: column;
       gap: 10px;
       background: transparent;
-      position: relative;
       z-index: 1;
     }
 
@@ -71,49 +73,17 @@
     }
 
     .user {
-      background: #1100ff;
+      background: #00c3ff;
       color: #ffffff;
       align-self: flex-end;
       border-bottom-right-radius: 0;
     }
 
     .bot {
-      background: #474747;
+      background: #707070;
       color: #ffffff;
       align-self: flex-start;
       border-bottom-left-radius: 0;
-    }
-
-    /* --- Input Area --- */
-    .input-container {
-      display: flex;
-      border-top: 1px solid #000000;
-      padding: 10px;
-      background: #000000;
-      border-radius: 0 0 20px 20px;
-      gap: 8px;
-    }
-
-    #input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 20px;
-      border: 3px solid #1100ff;
-      outline: none;
-    }
-
-    button {
-      padding: 10px 20px;
-      border-radius: 20px;
-      border: none;
-      background: #1100ff;
-      color: #ffffff;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #0a00cc;
     }
 
     /* --- Spinner --- */
@@ -126,7 +96,7 @@
 
     .loader {
       border: 4px solid #f3f3f3;
-      border-top: 4px solid #1100ff;
+      border-top: 4px solid #00c3ff;
       border-radius: 50%;
       width: 25px;
       height: 25px;
@@ -136,6 +106,45 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    /* --- Input Area --- */
+    .input-container {
+      display: flex;
+      border-top: 1px solid #333333;
+      padding: 10px;
+      background: #303030;
+      border-radius: 0 0 20px 20px;
+      gap: 8px;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 3px solid #00c3ff;
+      outline: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: #00c3ff;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #0a00cc;
+    }
+
+    /* --- Pulse animation for glow --- */
+    @keyframes pulse-glow {
+      0%   { box-shadow: 0 0 30px #02e1ff, 0 0 60px #02e1ff; }
+      50%  { box-shadow: 0 0 50px #038eff, 0 0 100px #0268ee; }
+      100% { box-shadow: 0 0 30px #02e1ff, 0 0 60px #02e1ff; }
     }
 
     /* --- Responsive Mobile --- */
