@@ -13,7 +13,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #000000; /* black background */
+      background: #ffffff; /* black background */
       overflow: hidden;
       position: relative;
     }
@@ -22,11 +22,15 @@
 
 
     .chat-container {
-  width: 70vw;
-  height: 70vh;
+  width: 50vw;
+  height: 92vh;
   display: flex;
   flex-direction: column;
   position: relative;
+  background: #000000;   /* dark gray box behind chat */
+  border-radius: 20px;    /* rounded edges */
+  box-shadow: 0 0 20px rgb(0, 17, 255); /* optional shadow */
+  padding: 10px;          /* padding so messages don’t touch edges */
 }
 
 .chat-container::before {
@@ -80,7 +84,7 @@
       display: flex;
       border-top: 1px solid #000000;
       padding: 10px;
-      background: rgba(255, 255, 255, 0.808); /* match chat container transparency */
+      background: rgb(0, 0, 0); /* match chat container transparency */
     }
 
     #input {
@@ -143,7 +147,7 @@
     }
   </style>
 </head>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <body>
   <div class="chat-container">
     <div id="chat"></div>
