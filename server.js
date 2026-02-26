@@ -55,7 +55,8 @@ app.post("/chat", async (req, res) => {
 });
 
 // --- Catch-all route for React routing ---
-app.get("*", (req, res) => {
+// NEW:
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "plumberbot-frontend/build", "index.html"));
 });
 
