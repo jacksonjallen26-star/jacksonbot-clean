@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 
   <style>
-    /* --- Page --- */
     html, body {
       height: 100%;
       margin: 0;
@@ -19,9 +18,8 @@
       background: #000000;
     }
 
-    /* --- Neon Border Wrapper --- */
     .neon-wrapper {
-      padding: 5px; /* thickness of neon border */
+      padding: 5px;
       border-radius: 25px;
       background: linear-gradient(45deg, #00e1ff, #003cff, #00e1ff);
       background-size: 300% 300%;
@@ -33,7 +31,6 @@
       100% { background-position: 100% 50%; }
     }
 
-    /* --- Chat Container --- */
     .chat-container {
       width: 50vw;
       height: 90vh;
@@ -45,7 +42,6 @@
       box-sizing: border-box;
     }
 
-    /* Title */
     .chat-container::before {
       content: "Jackson's Bot";
       position: absolute;
@@ -57,7 +53,6 @@
       color: #00c3ff;
     }
 
-    /* --- Messages --- */
     #chat {
       flex: 1;
       overflow-y: auto;
@@ -88,7 +83,6 @@
       border-bottom-left-radius: 0;
     }
 
-    /* --- Spinner --- */
     #spinner {
       display: none;
       justify-content: center;
@@ -109,7 +103,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* --- Input --- */
     .input-container {
       display: flex;
       gap: 8px;
@@ -139,7 +132,6 @@
       background: #008cff;
     }
 
-    /* --- Mobile --- */
     @media screen and (max-width: 600px) {
       .chat-container {
         width: 95vw;
@@ -165,7 +157,6 @@
     }
   </style>
 </head>
-
 <body>
 
   <div class="neon-wrapper">
@@ -201,7 +192,8 @@
       spinner.style.display = "flex";
 
       try {
-        const res = await fetch("/chat", {
+        // 🔹 UPDATE: fetch now calls your Render backend
+        const res = await fetch("https://plumberbot.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message })
