@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const send = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
-    // Add user message to chat
-    setMessages([...messages, { type: 'user', text: input }]);
+    // Add user message
+    setMessages(prev => [...prev, { type: 'user', text: input }]);
     setInput('');
+    setLoading(true);
 
     try {
-      const res = await fetch('https://jacksonbot-76u0.onrender.com', {
+      const res = await fetch('https://jacksonbot-76u0.onrender.com/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
@@ -24,6 +26,8 @@ function App() {
     } catch (err) {
       setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble. Try again.' }]);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -35,11 +39,18 @@ function App() {
           ))}
         </div>
 
+        {loading && (
+          <div id="spinner">
+            <div className="loader"></div>
+          </div>
+        )}
+
         <div className="input-container">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Ask Personal Bot..."
+            onKeyPress={e => { if (e.key === 'Enter') send(); }}
           />
           <button onClick={send}>Send</button>
         </div>

@@ -1,4 +1,4 @@
-/* --- Page --- */
+/* Global */
 html, body {
   height: 100%;
   margin: 0;
@@ -9,9 +9,9 @@ html, body {
   background: #000000;
 }
 
-/* --- Neon Border Wrapper --- */
+/* Neon wrapper */
 .neon-wrapper {
-  padding: 5px; /* thickness of neon border */
+  padding: 5px;
   border-radius: 25px;
   background: linear-gradient(45deg, #00e1ff, #003cff, #00e1ff);
   background-size: 300% 300%;
@@ -23,7 +23,7 @@ html, body {
   100% { background-position: 100% 50%; }
 }
 
-/* --- Chat Container --- */
+/* Chat container */
 .chat-container {
   width: 50vw;
   height: 90vh;
@@ -33,10 +33,10 @@ html, body {
   border-radius: 22px;
   padding: 15px;
   box-sizing: border-box;
-  position: relative; /* needed for the title ::before */
+  position: relative;
 }
 
-/* Title */
+/* Chat title */
 .chat-container::before {
   content: "Jackson's Bot";
   position: absolute;
@@ -48,7 +48,7 @@ html, body {
   color: #00c3ff;
 }
 
-/* --- Messages --- */
+/* Messages */
 #chat {
   flex: 1;
   overflow-y: auto;
@@ -65,23 +65,23 @@ html, body {
   word-wrap: break-word;
 }
 
-.user {
+.message.user {
   background: #00c3ff;
   color: white;
   align-self: flex-end;
   border-bottom-right-radius: 0;
 }
 
-.bot {
+.message.bot {
   background: #707070;
   color: white;
   align-self: flex-start;
   border-bottom-left-radius: 0;
 }
 
-/* --- Spinner --- */
+/* Spinner */
 #spinner {
-  display: none;
+  display: flex;
   justify-content: center;
   margin: 10px 0;
 }
@@ -100,14 +100,14 @@ html, body {
   100% { transform: rotate(360deg); }
 }
 
-/* --- Input --- */
+/* Input */
 .input-container {
   display: flex;
   gap: 8px;
   padding-top: 10px;
 }
 
-#input {
+.input-container input {
   flex: 1;
   padding: 10px;
   border-radius: 20px;
@@ -116,7 +116,7 @@ html, body {
   font-size: 16px;
 }
 
-button {
+.input-container button {
   padding: 10px 20px;
   border-radius: 20px;
   border: none;
@@ -126,11 +126,11 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+.input-container button:hover {
   background: #008cff;
 }
 
-/* --- Mobile --- */
+/* Mobile */
 @media screen and (max-width: 600px) {
   .chat-container {
     width: 95vw;
@@ -146,11 +146,7 @@ button:hover {
     flex-direction: column;
   }
 
-  #input {
-    width: 100%;
-  }
-
-  button {
+  .input-container input, .input-container button {
     width: 100%;
   }
 }
