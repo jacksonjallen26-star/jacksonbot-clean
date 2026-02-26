@@ -1,1 +1,8 @@
+# Ignore backend node modules
+node_modules/
+
+# Ignore environment variables
 .env
+
+# Optional logs
+npm-debug.log*
