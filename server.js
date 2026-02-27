@@ -7,6 +7,7 @@ require("dotenv").config(); // Load API key from .env
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "dist")));
 
 // OpenAI setup
 const openai = new OpenAI({
@@ -41,8 +42,8 @@ const buildPath = path.join(__dirname, "plumberbot-frontend", "build");
 app.use(express.static(buildPath));
 
 // --- Catch-all for React routes ---
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(buildPath, "index.html"));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 // Start server
