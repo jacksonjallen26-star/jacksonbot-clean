@@ -42,13 +42,13 @@ app.post("/chat", async (req, res) => {
 const frontendPath = path.join(
   __dirname,
   "plumberbot-frontend",
-  "build"   // CRA USES BUILD
+  "build"
 );
 
 app.use(express.static(frontendPath));
 
-// Catch-all to support React Router
-app.get("/*", (req, res) => {
+// Express 5 safe catch-all
+app.use((req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
