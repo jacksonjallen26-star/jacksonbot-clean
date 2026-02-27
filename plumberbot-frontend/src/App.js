@@ -7,7 +7,7 @@ function App() {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Scroll to bottom when messages update
+  // Auto-scroll to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
@@ -21,32 +21,29 @@ function App() {
     setTyping(true);
 
     try {
-      const res = await fetch('/chat', { // use relative path
+      // Relative API path works for dev (proxy) + production
+      const res = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
       });
-
       const data = await res.json();
 
       setMessages(prev => [...prev, { type: 'bot', text: data.reply, timestamp: new Date() }]);
     } catch (err) {
-      setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble. Try again.', timestamp: new Date() }]);
+      setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble.', timestamp: new Date() }]);
     }
 
     setTyping(false);
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') sendMessage();
-  };
+  const handleKeyPress = e => { if (e.key === 'Enter') sendMessage(); };
 
-  const formatTime = (date) => {
+  const formatTime = date => {
     const h = date.getHours();
     const m = date.getMinutes();
     const ampm = h >= 12 ? 'PM' : 'AM';
-    const hour = h % 12 || 12;
-    return `${hour}:${m.toString().padStart(2,'0')} ${ampm}`;
+    return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${ampm}`;
   };
 
   return (
@@ -62,7 +59,12 @@ function App() {
 
           {typing && (
             <div className="message bot">
-              JacksonBot is typing...
+              <div className="typing">
+                <span>JacksonBot is typing</span>
+                <span className="dot"></span>
+                <span className="dot"></span>
+                <span className="dot"></span>
+              </div>
             </div>
           )}
 
