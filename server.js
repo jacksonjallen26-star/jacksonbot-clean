@@ -2,51 +2,57 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const OpenAI = require("openai");
-require("dotenv").config(); // Load API key from .env
+require("dotenv").config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "dist")));
 
-// OpenAI setup
+// ===== OPENAI SETUP =====
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// System prompt
 const systemPrompt = `
 You are JacksonBot, a helpful and friendly virtual assistant...
 `;
 
-// Chat endpoint
+// ===== CHAT ENDPOINT =====
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
+
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: message }
+        { role: "user", content: message },
       ],
     });
+
     res.json({ reply: response.choices[0].message.content });
   } catch (err) {
     console.error(err);
-    res.json({ reply: "PlumberBot is having trouble right now." });
+    res.status(500).json({ reply: "PlumberBot is having trouble right now." });
   }
 });
 
-// Serve React build folder
-const buildPath = path.join(__dirname, "plumberbot-frontend", "build");
-app.use(express.static(buildPath));
+// ===== SERVE REACT BUILD =====
+const frontendPath = path.join(
+  __dirname,
+  "plumberbot-frontend",
+  "build"   // CRA USES BUILD
+);
 
-// --- Catch-all for React routes ---
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+app.use(express.static(frontendPath));
+
+// Catch-all to support React Router
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// Start server
+// ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
