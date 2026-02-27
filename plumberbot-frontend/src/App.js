@@ -15,23 +15,21 @@ function App() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    // Add user message
     setMessages(prev => [...prev, { type: 'user', text: input, timestamp: new Date() }]);
     setInput('');
     setTyping(true);
 
     try {
-      // Relative API path works for dev (proxy) + production
       const res = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
       });
-      const data = await res.json();
 
+      const data = await res.json();
       setMessages(prev => [...prev, { type: 'bot', text: data.reply, timestamp: new Date() }]);
     } catch (err) {
-      setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble.', timestamp: new Date() }]);
+      setMessages(prev => [...prev, { type: 'bot', text: 'Jet is having trouble.', timestamp: new Date() }]);
     }
 
     setTyping(false);
@@ -49,6 +47,14 @@ function App() {
   return (
     <div className="neon-wrapper">
       <div className="chat-container">
+
+        {/* ===== Chat Header ===== */}
+        <div className="chat-header">
+          <img src="/logo.png" alt="Jet Logo" className="chat-logo" />
+          <span className="chat-title">Jet</span>
+        </div>
+
+        {/* ===== Messages ===== */}
         <div id="chat">
           {messages.map((msg, i) => (
             <div key={i} className={`message ${msg.type}`}>
@@ -60,7 +66,7 @@ function App() {
           {typing && (
             <div className="message bot">
               <div className="typing">
-                <span>JacksonBot is typing</span>
+                <span>Jet is typing</span>
                 <span className="dot"></span>
                 <span className="dot"></span>
                 <span className="dot"></span>
@@ -71,16 +77,18 @@ function App() {
           <div ref={chatEndRef} />
         </div>
 
+        {/* ===== Input ===== */}
         <div className="input-container">
           <input
             type="text"
-            placeholder="Ask JacksonBot..."
+            placeholder="Ask Jet..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
           />
           <button onClick={sendMessage}>Send</button>
         </div>
+
       </div>
     </div>
   );

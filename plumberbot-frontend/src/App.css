@@ -41,18 +41,29 @@ html, body {
   overflow: hidden;
 }
 
-/* ==================== Chat Title ==================== */
-.chat-container::before {
-  content: "Jackson's Bot";
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Great Vibes', cursive;
-  font-size: 28px;
+/* ==================== Chat Header ==================== */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center logo + text */
+  gap: 12px; /* spacing between logo and text */
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.chat-logo {
+  width: 40px;  /* slightly bigger */
+  height: 40px;
+  object-fit: contain;
+}
+
+.chat-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 24px;  /* slightly bigger */
   color: #00c3ff;
-  text-shadow: 0 0 8px #00c3ff;
-  letter-spacing: 1px;
+  font-weight: 700;
+  text-shadow: 0 0 8px #00c3ff; /* more glow */
 }
 
 /* ==================== Messages ==================== */
@@ -185,11 +196,31 @@ html, body {
   }
 
   .input-container {
-    flex-direction: column;
+    flex-direction: column; /* stack input + button */
+    gap: 8px;               /* space between them */
+    padding-bottom: 10px;   /* bottom spacing */
   }
 
   .input-container input,
   .input-container button {
-    width: 100%;
+    width: 100%;            /* full width */
+    box-sizing: border-box; /* prevent overflow */
+  }
+
+  .input-container button {
+    padding: 12px 0;        /* full width button height */
+  }
+
+  .chat-header {
+    gap: 8px;
+  }
+
+  .chat-title {
+    font-size: 18px;
+  }
+
+  .chat-logo {
+    width: 25px;
+    height: 25px;
   }
 }
