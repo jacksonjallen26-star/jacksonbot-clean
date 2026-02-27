@@ -42,7 +42,7 @@ const buildPath = path.join(__dirname, "plumberbot-frontend", "build");
 app.use(express.static(buildPath));
 
 // --- Catch-all for React routes ---
-app.get("*", (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
