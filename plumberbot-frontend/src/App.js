@@ -1,33 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 function App() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const send = async () => {
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, typing]);
+
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     // Add user message
-    setMessages(prev => [...prev, { type: 'user', text: input }]);
+    setMessages(prev => [...prev, { type: 'user', text: input, timestamp: new Date() }]);
     setInput('');
-    setLoading(true);
+    setTyping(true);
 
     try {
-      const res = await fetch('https://jacksonbot-76u0.onrender.com/chat', {
+      const res = await fetch('/chat', { // use relative path
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
       });
 
       const data = await res.json();
-      setMessages(prev => [...prev, { type: 'bot', text: data.reply }]);
+
+      setMessages(prev => [...prev, { type: 'bot', text: data.reply, timestamp: new Date() }]);
     } catch (err) {
-      setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble. Try again.' }]);
+      setMessages(prev => [...prev, { type: 'bot', text: 'PlumberBot is having trouble. Try again.', timestamp: new Date() }]);
     }
 
-    setLoading(false);
+    setTyping(false);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') sendMessage();
+  };
+
+  const formatTime = (date) => {
+    const h = date.getHours();
+    const m = date.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2,'0')} ${ampm}`;
   };
 
   return (
@@ -35,24 +54,30 @@ function App() {
       <div className="chat-container">
         <div id="chat">
           {messages.map((msg, i) => (
-            <div key={i} className={`message ${msg.type}`}>{msg.text}</div>
+            <div key={i} className={`message ${msg.type}`}>
+              {msg.text}
+              <div className="timestamp">{formatTime(msg.timestamp)}</div>
+            </div>
           ))}
-        </div>
 
-        {loading && (
-          <div id="spinner">
-            <div className="loader"></div>
-          </div>
-        )}
+          {typing && (
+            <div className="message bot">
+              JacksonBot is typing...
+            </div>
+          )}
+
+          <div ref={chatEndRef} />
+        </div>
 
         <div className="input-container">
           <input
+            type="text"
+            placeholder="Ask JacksonBot..."
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Ask Personal Bot..."
-            onKeyPress={e => { if (e.key === 'Enter') send(); }}
+            onKeyPress={handleKeyPress}
           />
-          <button onClick={send}>Send</button>
+          <button onClick={sendMessage}>Send</button>
         </div>
       </div>
     </div>
