@@ -45,19 +45,6 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ===== SERVE REACT BUILD =====
-const frontendPath = path.join(
-  __dirname,
-  "plumberbot-frontend",
-  "build"
-);
-
-app.use(express.static(frontendPath));
-
-// Express 5 safe catch-all
-app.use((req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
 
 // ===== START SERVER =====
 const PORT = process.env.PORT || 3001; // Use 3001 locally
