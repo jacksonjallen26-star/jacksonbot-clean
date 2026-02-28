@@ -1,14 +1,14 @@
 // public/widget.js
-
 (function() {
-  // Create a container if it doesn't exist
   function injectBot(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
-    // Create an iframe for your bot
+    // Clear any existing content
+    container.innerHTML = '';
+
     const iframe = document.createElement('iframe');
-    iframe.src = '/'; // This loads your React app root
+    iframe.src = 'https://yourbot.onrender.com'; // <- Use the full URL
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
@@ -17,7 +17,6 @@
     container.appendChild(iframe);
   }
 
-  // Expose globally
   window.BotWidget = {
     init: function({ container }) {
       injectBot(container);
