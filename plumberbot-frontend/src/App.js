@@ -34,7 +34,7 @@ function App() {
     setTyping(true);
 
     try {
-      const res = await fetch("jacksonbot-clean-production.up.railway.app", {
+      const res = await fetch("https://hjacksonbot-clean-production.up.railway.app/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
