@@ -8,7 +8,7 @@
     container.innerHTML = '';
 
     const iframe = document.createElement('iframe');
-    iframe.src = 'https://yourbot.onrender.com'; // <- Use the full URL
+    iframe.src = 'https://jacksonbot-clean.vercel.app/'; // <- Use the full URL
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';

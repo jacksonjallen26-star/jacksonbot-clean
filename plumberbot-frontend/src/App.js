@@ -34,7 +34,7 @@ function App() {
     setTyping(true);
 
     try {
-      const res = await fetch("/chat", {
+      const res = await fetch("https://jacksonbot-clean.vercel.app/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
