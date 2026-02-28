@@ -6,6 +6,13 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
+  let isWidget = false;
+
+try {
+  isWidget = window.self !== window.top;
+} catch (e) {
+  isWidget = true;
+}
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -45,7 +52,7 @@ function App() {
   };
 
   return (
-    <div className="neon-wrapper">
+  <div className={isWidget ? "widget-mode" : "neon-wrapper"}>
       <div className="chat-container">
 
         {/* ===== Chat Header ===== */}

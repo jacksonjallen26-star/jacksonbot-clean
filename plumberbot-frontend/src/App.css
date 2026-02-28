@@ -3,14 +3,22 @@ html, body {
   height: 100%;
   margin: 0;
   font-family: 'Arial', sans-serif;
+  background: transparent;
+}
+
+.widget-mode {
+  height: 100%;
+  background: transparent;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #0a0a0a;
 }
 
 /* ==================== Neon Wrapper ==================== */
 .neon-wrapper {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   padding: 5px;
   border-radius: 25px;
   background: linear-gradient(45deg, #00e1ff, #003cff, #ff00ff);
@@ -29,7 +37,7 @@ html, body {
 .chat-container {
   width: 50vw;
   max-width: 600px;
-  height: 90vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #1f1f1f;
