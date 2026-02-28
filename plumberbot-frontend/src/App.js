@@ -34,7 +34,7 @@ function App() {
     setTyping(true);
 
     try {
-      const res = await fetch("https://jacksonbot-clean.vercel.app/", {
+      const res = await fetch("jacksonbot-clean-production.up.railway.app", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
