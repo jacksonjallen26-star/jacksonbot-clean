@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 
@@ -7,6 +8,7 @@ function App() {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
 
+  // Determine if in a widget iframe
   let isWidget = false;
   try {
     isWidget = window.self !== window.top;
@@ -14,10 +16,19 @@ function App() {
     isWidget = true;
   }
 
+  // ===== Generate or load a unique userId per visitor =====
+  let userId = localStorage.getItem("jetUserId");
+  if (!userId) {
+    userId = crypto.randomUUID(); // generates a unique ID
+    localStorage.setItem("jetUserId", userId);
+  }
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
+  // ===== Send a message =====
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -30,7 +41,11 @@ function App() {
       const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ 
+          message: input,
+          userId,               // send userId for memory
+          companyId: "default"  // optional: for multi-company support
+        }),
       });
 
       const data = await res.json();

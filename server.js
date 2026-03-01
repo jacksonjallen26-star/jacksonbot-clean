@@ -2,7 +2,7 @@
 
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose"); // MongoDB driver
+const mongoose = require("mongoose");
 const OpenAI = require("openai");
 require("dotenv").config();
 
@@ -15,7 +15,9 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // ===== CHAT SCHEMA =====
 const chatSchema = new mongoose.Schema({
-  role: String,        // "user" or "bot"
+  companyId: String,      // optional: separate chats per company
+  userId: String,         // optional: separate chats per user
+  role: String,           // "user" or "bot"
   message: String,
   timestamp: { type: Date, default: Date.now }
 });
@@ -24,7 +26,7 @@ const Chat = mongoose.model("Chat", chatSchema);
 
 // ===== MIDDLEWARE =====
 app.use(cors({
-  origin: "https://jacksonbot-clean.vercel.app",
+  origin: "https://jacksonbot-clean.vercel.app", // your frontend URL
   methods: ["GET", "POST"],
 }));
 app.use(express.json());
@@ -34,30 +36,41 @@ app.get("/", (req, res) => {
   res.send("Backend is alive");
 });
 
-// ===== CHAT ENDPOINT =====
+// ===== CHAT ENDPOINT (with memory) =====
 app.post("/chat", async (req, res) => {
-  const { message } = req.body;
+  const { message, userId = "guest", companyId = "default" } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ reply: "No message provided." });
-  }
+  if (!message) return res.status(400).json({ reply: "No message provided." });
 
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+    // Load last 10 messages for this user/company
+    const previousMessages = await Chat.find({ userId, companyId })
+                                       .sort({ timestamp: 1 })
+                                       .limit(10);
+
+    // Format for OpenAI
+    const historyForOpenAI = previousMessages.map(msg => ({
+      role: msg.role,
+      content: msg.message
+    }));
+
+    // Send to OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are Jet, a helpful and friendly AI assistant." },
+        ...historyForOpenAI,
         { role: "user", content: message }
-      ],
+      ]
     });
 
     const botReply = completion.choices[0].message.content;
 
-    // ===== SAVE TO MONGODB =====
-    await Chat.create({ role: "user", message });
-    await Chat.create({ role: "bot", message: botReply });
+    // Save user message & bot reply
+    await Chat.create({ userId, companyId, role: "user", message });
+    await Chat.create({ userId, companyId, role: "bot", message: botReply });
 
     res.json({ reply: botReply });
 
