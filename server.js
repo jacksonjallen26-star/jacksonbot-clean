@@ -2,7 +2,7 @@
 
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose"); // 👈 ADD THIS
+const mongoose = require("mongoose"); // MongoDB driver
 const OpenAI = require("openai");
 require("dotenv").config();
 
@@ -13,12 +13,20 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
+// ===== CHAT SCHEMA =====
+const chatSchema = new mongoose.Schema({
+  role: String,        // "user" or "bot"
+  message: String,
+  timestamp: { type: Date, default: Date.now }
+});
+
+const Chat = mongoose.model("Chat", chatSchema);
+
 // ===== MIDDLEWARE =====
 app.use(cors({
   origin: "https://jacksonbot-clean.vercel.app",
   methods: ["GET", "POST"],
 }));
-
 app.use(express.json());
 
 // ===== HEALTH CHECK =====
@@ -35,39 +43,32 @@ app.post("/chat", async (req, res) => {
   }
 
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: "You are Jet, a helpful and friendly AI assistant."
-        },
-        {
-          role: "user",
-          content: message
-        }
+        { role: "system", content: "You are Jet, a helpful and friendly AI assistant." },
+        { role: "user", content: message }
       ],
     });
 
-    res.json({
-      reply: completion.choices[0].message.content
-    });
+    const botReply = completion.choices[0].message.content;
+
+    // ===== SAVE TO MONGODB =====
+    await Chat.create({ role: "user", message });
+    await Chat.create({ role: "bot", message: botReply });
+
+    res.json({ reply: botReply });
 
   } catch (error) {
-    console.error("OpenAI Error:", error);
-    res.status(500).json({
-      reply: "Jet is having trouble right now."
-    });
+    console.error("Error:", error);
+    res.status(500).json({ reply: "Jet is having trouble right now." });
   }
 });
 
 // ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
