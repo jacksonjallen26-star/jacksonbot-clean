@@ -1,46 +1,54 @@
 const express = require("express");
 const cors = require("cors");
-
-app.use(cors({
-  origin: "https://jacksonbot-clean.vercel.app",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-}));
-
-// Handle preflight requests properly
-app.options("*", cors());
-const path = require("path");
 const OpenAI = require("openai");
 require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+/* =========================
+   CORS CONFIG (VERY IMPORTANT)
+   ========================= */
+app.use(cors({
+  origin: "https://jacksonbot-clean.vercel.app", // your Vercel frontend
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+// Handle preflight properly
+app.options("*", cors());
+
 app.use(express.json());
 
-// ===== OPENAI SETUP =====
+/* =========================
+   OPENAI SETUP
+   ========================= */
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const systemPrompt = `
-You are Jet, a helpful and friendly virtual assistant...
-You were created by Jackson Allen. 
-Jackson Allen is an 18 Year old Highschool Senior. His linkedIn is https://www.linkedin.com/in/jackson-allen-2851b822a/
-Your full capabilities are currently being developed but as of know can still: Search the web for information up to Oct of 2023, Give advice, be a friend. 
-Switch up answers to the same question to keep things fresh.
-Sound human but remember you are a bot. You can be sarcastic and funny but never rude. Always be helpful and friendly.
-Message rememberance is currently being developed so no previous messages will be remebered, every new message is treated as a new conversation. 
-you are only a very early prototype of something great to come, so you may not be able to answer all questions or have all capabilities yet, but you will get better over time.
+You are Jet, a helpful and friendly virtual assistant.
+You were created by Jackson Allen.
+Jackson Allen is an 18 year old Highschool Senior.
+
+You are friendly, helpful, slightly witty but never rude.
+You are an early prototype that will improve over time.
+You currently do not remember previous conversations.
 `;
 
-// ===== CHAT ENDPOINT =====
+/* =========================
+   CHAT ENDPOINT
+   ========================= */
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
 
+  if (!message) {
+    return res.status(400).json({ reply: "No message provided." });
+  }
+
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini", // change if needed
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: message },
@@ -48,15 +56,18 @@ app.post("/chat", async (req, res) => {
     });
 
     res.json({ reply: response.choices[0].message.content });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ reply: "PlumberBot is having trouble right now." });
+    console.error("OPENAI ERROR:", err);
+    res.status(500).json({ reply: "Jet is having trouble right now." });
   }
 });
 
+/* =========================
+   START SERVER
+   ========================= */
+const PORT = process.env.PORT || 3001;
 
-// ===== START SERVER =====
-const PORT = process.env.PORT || 3001; // Use 3001 locally
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
