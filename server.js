@@ -9,8 +9,7 @@ const app = express();
 
 // ===== CORS =====
 // Replace with your Vercel URL
-const allowedOrigins = ["https://jacksonbot-clean.vercel.app"];
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors()); // WARNING: allows any site
 
 app.use(express.json());
 
