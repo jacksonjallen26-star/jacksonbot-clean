@@ -10,12 +10,10 @@ const app = express();
    ========================= */
 app.use(cors({
   origin: "https://jacksonbot-clean.vercel.app", // your Vercel frontend
-  methods: ["GET", "POST", "OPTIONS"],
+  methods: ["GET", "POST",],
   allowedHeaders: ["Content-Type"],
 }));
 
-// Handle preflight properly
-app.options("*", cors());
 
 app.use(express.json());
 
