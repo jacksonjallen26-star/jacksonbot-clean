@@ -14,7 +14,7 @@ app.use(cors()); // WARNING: allows any site
 app.use(express.json());
 
 // ===== HEALTH CHECK =====
-app.get("/", (req, res) => {
+app.get("/*", (req, res) => {
   res.send("Backend is alive");
 });
 
@@ -43,14 +43,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ===== STATIC FRONTEND SERVING =====
-// Serve React build AFTER API routes
-const frontendPath = path.join(__dirname, "plumberbot-frontend", "build");
-app.use(express.static(frontendPath));
 
-app.all("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
 
 // ===== START SERVER =====
 const PORT = process.env.PORT || 3001;
