@@ -9,10 +9,7 @@ const app = express();
 
 // ===== MIDDLEWARE =====
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://jacksonbot-clean.vercel.app/"
-  ],
+  origin: "https://jacksonbot-clean.vercel.app",
   methods: ["GET", "POST"],
 }));
 
