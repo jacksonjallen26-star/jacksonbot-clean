@@ -7,7 +7,6 @@ function App() {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Detect if running inside iframe (widget mode)
   let isWidget = false;
   try {
     isWidget = window.self !== window.top;
@@ -15,7 +14,6 @@ function App() {
     isWidget = true;
   }
 
-  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
@@ -23,55 +21,34 @@ function App() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = {
-      type: "user",
-      text: input,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const userMessage = { type: "user", text: input, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
     setInput("");
     setTyping(true);
 
     try {
-      const res = await fetch("https://jacksonbot-clean-production.up.railway.app", {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
 
       const data = await res.json();
-
-      const botMessage = {
-        type: "bot",
-        text: data.reply,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
+      const botMessage = { type: "bot", text: data.reply, timestamp: new Date() };
+      setMessages(prev => [...prev, botMessage]);
     } catch (err) {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
-        {
-          type: "bot",
-          text: "Jet is having trouble right now.",
-          timestamp: new Date(),
-        },
+        { type: "bot", text: "Jet is having trouble right now.", timestamp: new Date() },
       ]);
     }
 
     setTyping(false);
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
-  };
+  const handleKeyPress = e => { if (e.key === "Enter") sendMessage(); };
 
-  const formatTime = (date) => {
+  const formatTime = date => {
     const h = date.getHours();
     const m = date.getMinutes();
     const ampm = h >= 12 ? "PM" : "AM";
@@ -81,23 +58,18 @@ function App() {
   return (
     <div className={isWidget ? "widget-mode" : "neon-wrapper"}>
       <div className="chat-container">
-        {/* ===== Header ===== */}
         <div className="chat-header">
           <img src="/logo.png" alt="Jet Logo" className="chat-logo" />
           <span className="chat-title">Jet</span>
         </div>
 
-        {/* ===== Messages ===== */}
         <div id="chat">
           {messages.map((msg, i) => (
             <div key={i} className={`message ${msg.type}`}>
               {msg.text}
-              <div className="timestamp">
-                {formatTime(msg.timestamp)}
-              </div>
+              <div className="timestamp">{formatTime(msg.timestamp)}</div>
             </div>
           ))}
-
           {typing && (
             <div className="message bot">
               <div className="typing">
@@ -108,17 +80,15 @@ function App() {
               </div>
             </div>
           )}
-
           <div ref={chatEndRef} />
         </div>
 
-        {/* ===== Input ===== */}
         <div className="input-container">
           <input
             type="text"
             placeholder="Ask Jet..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
           />
           <button onClick={sendMessage}>Send</button>
@@ -127,6 +97,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;
