@@ -2,10 +2,16 @@
 
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose"); // 👈 ADD THIS
 const OpenAI = require("openai");
 require("dotenv").config();
 
 const app = express();
+
+// ===== CONNECT TO MONGODB =====
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
 // ===== MIDDLEWARE =====
 app.use(cors({
