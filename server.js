@@ -1,71 +1,65 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
-require("dotenv").config();
 
 const app = express();
 
-/* =========================
-   CORS CONFIG (VERY IMPORTANT)
-   ========================= */
+// ✅ Middleware
+app.use(express.json());
+
+// ✅ CORS (IMPORTANT for Vercel frontend)
 app.use(cors({
-  origin: "https://jacksonbot-clean.vercel.app", // your Vercel frontend
-  methods: ["GET", "POST",],
+  origin: [
+    "https://jacksonbot-clean.vercel.app",
+    "http://localhost:3000"
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 }));
 
+// ✅ Express 5 preflight fix
+app.options("/*", cors());
 
-app.use(express.json());
-
-/* =========================
-   OPENAI SETUP
-   ========================= */
+// ✅ OpenAI Setup
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const systemPrompt = `
-You are Jet, a helpful and friendly virtual assistant.
-You were created by Jackson Allen.
-Jackson Allen is an 18 year old Highschool Senior.
+// ✅ Health check (important for Railway)
+app.get("/", (req, res) => {
+  res.json({ status: "Jet backend running 🚀" });
+});
 
-You are friendly, helpful, slightly witty but never rude.
-You are an early prototype that will improve over time.
-You currently do not remember previous conversations.
-`;
-
-/* =========================
-   CHAT ENDPOINT
-   ========================= */
+// ✅ Chat Endpoint
 app.post("/chat", async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ reply: "No message provided." });
-  }
-
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // change if needed
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "No message provided" });
+    }
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message },
+        { role: "system", content: "You are Jet, a helpful AI assistant." },
+        { role: "user", content: message }
       ],
     });
 
-    res.json({ reply: response.choices[0].message.content });
+    res.json({
+      reply: completion.choices[0].message.content
+    });
 
-  } catch (err) {
-    console.error("OPENAI ERROR:", err);
-    res.status(500).json({ reply: "Jet is having trouble right now." });
+  } catch (error) {
+    console.error("Chat Error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-/* =========================
-   START SERVER
-   ========================= */
-const PORT = process.env.PORT || 3001;
-
+// ✅ Railway PORT
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
