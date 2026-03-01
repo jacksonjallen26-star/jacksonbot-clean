@@ -1,5 +1,14 @@
 const express = require("express");
 const cors = require("cors");
+
+app.use(cors({
+  origin: "https://jacksonbot-clean.vercel.app",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+// Handle preflight requests properly
+app.options("*", cors());
 const path = require("path");
 const OpenAI = require("openai");
 require("dotenv").config();
