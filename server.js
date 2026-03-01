@@ -5,16 +5,22 @@ const OpenAI = require("openai").default;
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// IMPORTANT: Explicit CORS config
+app.use(cors({
+  origin: "https://jacksonbot-clean.vercel.app",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
 
-// Health check
+// This fixes Express 5 preflight issue
+app.options("/chat", cors());
+
+app.use(express.json());
+
 app.get("/", (req, res) => {
   res.send("Jet backend running");
 });
 
-// Chat route
 app.post("/chat", async (req, res) => {
   try {
     const openai = new OpenAI({
@@ -34,7 +40,7 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("OpenAI Error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
