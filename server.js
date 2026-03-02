@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 // ===== CHAT SCHEMA =====
 const chatSchema = new mongoose.Schema({
   userId: String,
-  companyId: { type: String, default: "default" },
+  companyId: { type: String, required: true },
   role: String,             // 'user' or 'bot'
   message: String,
   timestamp: { type: Date, default: Date.now },
@@ -38,7 +38,11 @@ app.get("/", (req, res) => {
 
 // ===== CHAT ENDPOINT =====
 app.post("/chat", async (req, res) => {
-  const { message, userId, companyId = "default" } = req.body;
+  const { message, userId, companyId } = req.body;
+
+  if (!companyId) {
+  return res.status(400).json({ reply: "Company ID required." });
+}
 
   if (!message) return res.status(400).json({ reply: "No message provided." });
 
@@ -86,8 +90,8 @@ app.post("/chat", async (req, res) => {
 
 // ===== HISTORY ENDPOINT =====
 app.get("/history", async (req, res) => {
-  const { userId, companyId = "default" } = req.query;
-  if (!userId) return res.status(400).json([]);
+  const { userId, companyId} = req.query;
+  if (!companyId) return res.status(400).json([]);
 
   try {
     const previousMessages = await Chat.find({ userId, companyId })
