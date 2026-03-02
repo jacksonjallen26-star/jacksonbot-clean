@@ -8,10 +8,11 @@ function App() {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
 
-  // 🔹 Set your companyId here (must match MongoDB Company record)
-  const companyId = "demo123";
+  // ✅ Dynamically read companyId from iframe URL
+  const params = new URLSearchParams(window.location.search);
+  const companyId = params.get("companyId") || "default";
 
-  // Determine if in a widget iframe
+  // Detect widget mode
   let isWidget = false;
   try {
     isWidget = window.self !== window.top;
@@ -35,7 +36,12 @@ function App() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = { type: "user", text: input, timestamp: new Date() };
+    const userMessage = {
+      type: "user",
+      text: input,
+      timestamp: new Date()
+    };
+
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setTyping(true);

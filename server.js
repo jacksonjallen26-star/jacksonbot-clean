@@ -7,87 +7,89 @@ require("dotenv").config();
 
 const app = express();
 
-// ===== MONGODB SETUP =====
-mongoose.connect(process.env.MONGODB_URI, {
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.error("MongoDB connection error:", err));
+// =====================
+// MongoDB Connection
+// =====================
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
+// =====================
+// Company Schema
+// =====================
 const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   companyId: { type: String, required: true, unique: true },
+  plan: { type: String, default: "starter" },   // optional for future billing
+  active: { type: Boolean, default: true },     // optional subscription control
   createdAt: { type: Date, default: Date.now }
 });
 
 const Company = mongoose.model("Company", companySchema);
 
-// ===== TEMP ROUTE TO CREATE A COMPANY =====
-app.get("/create-company", async (req, res) => {
-  try {
-    const company = await Company.create({
-      name: "Demo Business",   // Change this to your company name
-      companyId: "demo123"     // This will be the companyId you use in frontend
-    });
-
-    res.json({ message: "Company created", company });
-  } catch (err) {
-    console.error("Failed to create company:", err);
-    res.status(500).json({ message: "Failed to create company", error: err.message });
-  }
-});
-
-// ===== CHAT SCHEMA =====
+// =====================
+// Chat Schema
+// =====================
 const chatSchema = new mongoose.Schema({
-  userId: String,
+  userId: { type: String, required: true },
   companyId: { type: String, required: true },
-  role: String,             // 'user' or 'bot'
-  message: String,
-  timestamp: { type: Date, default: Date.now },
+  role: { type: String, required: true }, // 'user' or 'bot'
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
 });
 
 const Chat = mongoose.model("Chat", chatSchema);
 
-// ===== MIDDLEWARE =====
+// =====================
+// Middleware
+// =====================
 app.use(cors({
-  origin: "https://jacksonbot-clean.vercel.app", // your frontend
+  origin: "https://jacksonbot-clean.vercel.app",
   methods: ["GET", "POST"],
 }));
+
 app.use(express.json());
 
-// ===== HEALTH CHECK =====
+// =====================
+// Health Check
+// =====================
 app.get("/", (req, res) => {
   res.send("Backend is alive");
 });
 
-// ===== CHAT ENDPOINT =====
+// =====================
+// Chat Endpoint
+// =====================
 app.post("/chat", async (req, res) => {
   const { message, userId, companyId } = req.body;
 
   if (!companyId) {
-  return res.status(400).json({ reply: "Company ID required." });
-}
+    return res.status(400).json({ reply: "Company ID required." });
+  }
 
-  if (!message) return res.status(400).json({ reply: "No message provided." });
+  if (!message || !userId) {
+    return res.status(400).json({ reply: "Missing message or userId." });
+  }
 
   try {
-    // ===== Load last 10 messages for context =====
-    let previousMessages = [];
-    try {
-      previousMessages = await Chat.find({ userId, companyId })
-                                   .sort({ timestamp: 1 })
-                                   .limit(10);
-    } catch (err) {
-      console.error("Failed to load chat history:", err);
+    // Check if company exists & is active
+    const company = await Company.findOne({ companyId });
+    if (!company || !company.active) {
+      return res.status(403).json({ reply: "Invalid or inactive company." });
     }
 
-    // ===== Map roles for OpenAI =====
+    // Load last 10 messages
+    const previousMessages = await Chat.find({ userId, companyId })
+      .sort({ timestamp: 1 })
+      .limit(10);
+
     const historyForOpenAI = previousMessages.map(msg => ({
       role: msg.role === "bot" ? "assistant" : msg.role,
       content: msg.message
     }));
 
-    // ===== OpenAI request =====
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -99,9 +101,20 @@ app.post("/chat", async (req, res) => {
 
     const botReply = completion.choices[0].message.content;
 
-    // ===== Save user message and bot reply =====
-    await Chat.create({ userId, companyId, role: "user", message, timestamp: new Date() });
-    await Chat.create({ userId, companyId, role: "bot", message: botReply, timestamp: new Date() });
+    // Save messages
+    await Chat.create({
+      userId,
+      companyId,
+      role: "user",
+      message
+    });
+
+    await Chat.create({
+      userId,
+      companyId,
+      role: "bot",
+      message: botReply
+    });
 
     res.json({ reply: botReply });
 
@@ -111,25 +124,34 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ===== HISTORY ENDPOINT =====
+// =====================
+// History Endpoint
+// =====================
 app.get("/history", async (req, res) => {
-  const { userId, companyId} = req.query;
-  if (!companyId) return res.status(400).json([]);
+  const { userId, companyId } = req.query;
+
+  if (!userId || !companyId) {
+    return res.status(400).json([]);
+  }
 
   try {
     const previousMessages = await Chat.find({ userId, companyId })
-                                       .sort({ timestamp: 1 });
+      .sort({ timestamp: 1 });
+
     res.json(previousMessages.map(msg => ({
       type: msg.role === "bot" ? "bot" : "user",
       text: msg.message,
       timestamp: msg.timestamp
     })));
+
   } catch (err) {
     console.error("Failed to load chat history:", err);
     res.status(500).json([]);
   }
 });
 
-// ===== START SERVER =====
+// =====================
+// Start Server
+// =====================
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
