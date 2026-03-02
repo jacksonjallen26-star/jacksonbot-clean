@@ -21,6 +21,21 @@ const companySchema = new mongoose.Schema({
 
 const Company = mongoose.model("Company", companySchema);
 
+// ===== TEMP ROUTE TO CREATE A COMPANY =====
+app.get("/create-company", async (req, res) => {
+  try {
+    const company = await Company.create({
+      name: "Demo Business",   // Change this to your company name
+      companyId: "demo123"     // This will be the companyId you use in frontend
+    });
+
+    res.json({ message: "Company created", company });
+  } catch (err) {
+    console.error("Failed to create company:", err);
+    res.status(500).json({ message: "Failed to create company", error: err.message });
+  }
+});
+
 // ===== CHAT SCHEMA =====
 const chatSchema = new mongoose.Schema({
   userId: String,
