@@ -20,8 +20,17 @@ mongoose.connect(process.env.MONGODB_URI)
 const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   companyId: { type: String, required: true, unique: true },
-  plan: { type: String, default: "starter" },   // optional for future billing
-  active: { type: Boolean, default: true },     // optional subscription control
+
+  // SaaS controls
+  active: { type: Boolean, default: true },
+  plan: { type: String, default: "starter" },
+
+  // Custom AI personality per company
+  systemPrompt: {
+    type: String,
+    default: "You are Jet, a helpful and friendly AI assistant."
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -45,9 +54,8 @@ const Chat = mongoose.model("Chat", chatSchema);
 // =====================
 app.use(cors({
   origin: "https://jacksonbot-clean.vercel.app",
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST"]
 }));
-
 app.use(express.json());
 
 // =====================
@@ -63,20 +71,14 @@ app.get("/", (req, res) => {
 app.post("/chat", async (req, res) => {
   const { message, userId, companyId } = req.body;
 
-  if (!companyId) {
-    return res.status(400).json({ reply: "Company ID required." });
-  }
-
-  if (!message || !userId) {
-    return res.status(400).json({ reply: "Missing message or userId." });
-  }
+  if (!companyId) return res.status(400).json({ reply: "Company ID required." });
+  if (!message || !userId) return res.status(400).json({ reply: "Missing message or userId." });
 
   try {
-    // Check if company exists & is active
+    // ✅ Fetch company once
     const company = await Company.findOne({ companyId });
-    if (!company || !company.active) {
-      return res.status(403).json({ reply: "Invalid or inactive company." });
-    }
+    if (!company) return res.status(400).json({ reply: "Invalid company." });
+    if (!company.active) return res.status(403).json({ reply: "Subscription inactive." });
 
     // Load last 10 messages
     const previousMessages = await Chat.find({ userId, companyId })
@@ -84,16 +86,16 @@ app.post("/chat", async (req, res) => {
       .limit(10);
 
     const historyForOpenAI = previousMessages.map(msg => ({
-      role: msg.role === "bot" ? "assistant" : msg.role,
+      role: msg.role === "bot" ? "assistant" : "user",
       content: msg.message
     }));
 
+    // OpenAI request using company's systemPrompt
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are Jet, a helpful and friendly AI assistant." },
+        { role: "system", content: company.systemPrompt },
         ...historyForOpenAI,
         { role: "user", content: message }
       ],
@@ -101,25 +103,14 @@ app.post("/chat", async (req, res) => {
 
     const botReply = completion.choices[0].message.content;
 
-    // Save messages
-    await Chat.create({
-      userId,
-      companyId,
-      role: "user",
-      message
-    });
-
-    await Chat.create({
-      userId,
-      companyId,
-      role: "bot",
-      message: botReply
-    });
+    // Save user + bot messages
+    await Chat.create({ userId, companyId, role: "user", message });
+    await Chat.create({ userId, companyId, role: "bot", message: botReply });
 
     res.json({ reply: botReply });
 
   } catch (error) {
-    console.error("OpenAI Error:", error);
+    console.error("Chat Error:", error);
     res.status(500).json({ reply: "Jet is having trouble right now." });
   }
 });
@@ -129,10 +120,7 @@ app.post("/chat", async (req, res) => {
 // =====================
 app.get("/history", async (req, res) => {
   const { userId, companyId } = req.query;
-
-  if (!userId || !companyId) {
-    return res.status(400).json([]);
-  }
+  if (!userId || !companyId) return res.status(400).json([]);
 
   try {
     const previousMessages = await Chat.find({ userId, companyId })
@@ -143,7 +131,6 @@ app.get("/history", async (req, res) => {
       text: msg.message,
       timestamp: msg.timestamp
     })));
-
   } catch (err) {
     console.error("Failed to load chat history:", err);
     res.status(500).json([]);
