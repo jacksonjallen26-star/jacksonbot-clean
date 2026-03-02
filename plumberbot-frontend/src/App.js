@@ -8,6 +8,9 @@ function App() {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef(null);
 
+  // 🔹 Set your companyId here (must match MongoDB Company record)
+  const companyId = "demo123";
+
   // Determine if in a widget iframe
   let isWidget = false;
   try {
@@ -19,7 +22,7 @@ function App() {
   // ===== Generate or load a unique userId per visitor =====
   let userId = localStorage.getItem("jetUserId");
   if (!userId) {
-    userId = crypto.randomUUID(); // generates a unique ID
+    userId = crypto.randomUUID();
     localStorage.setItem("jetUserId", userId);
   }
 
@@ -41,27 +44,40 @@ function App() {
       const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: input,
-          userId,               // send userId for memory
-          companyId: "default"  // optional: for multi-company support
+          userId,
+          companyId
         }),
       });
 
       const data = await res.json();
-      const botMessage = { type: "bot", text: data.reply, timestamp: new Date() };
+
+      const botMessage = {
+        type: "bot",
+        text: data.reply,
+        timestamp: new Date()
+      };
+
       setMessages(prev => [...prev, botMessage]);
+
     } catch (err) {
       setMessages(prev => [
         ...prev,
-        { type: "bot", text: "Jet is having trouble right now.", timestamp: new Date() },
+        {
+          type: "bot",
+          text: "Jet is having trouble right now.",
+          timestamp: new Date()
+        },
       ]);
     }
 
     setTyping(false);
   };
 
-  const handleKeyPress = e => { if (e.key === "Enter") sendMessage(); };
+  const handleKeyPress = e => {
+    if (e.key === "Enter") sendMessage();
+  };
 
   const formatTime = date => {
     const h = date.getHours();
@@ -85,6 +101,7 @@ function App() {
               <div className="timestamp">{formatTime(msg.timestamp)}</div>
             </div>
           ))}
+
           {typing && (
             <div className="message bot">
               <div className="typing">
@@ -95,6 +112,7 @@ function App() {
               </div>
             </div>
           )}
+
           <div ref={chatEndRef} />
         </div>
 

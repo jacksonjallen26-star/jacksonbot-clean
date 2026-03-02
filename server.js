@@ -13,6 +13,14 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error("MongoDB connection error:", err));
 
+const companySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  companyId: { type: String, required: true, unique: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Company = mongoose.model("Company", companySchema);
+
 // ===== CHAT SCHEMA =====
 const chatSchema = new mongoose.Schema({
   userId: String,
