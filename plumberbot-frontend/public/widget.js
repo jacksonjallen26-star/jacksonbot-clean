@@ -4,7 +4,7 @@
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
-    container.innerHTML = '';
+    container.innerHTML = ''; // clear previous content
 
     const iframe = document.createElement('iframe');
     iframe.src = `https://jacksonbot-clean.vercel.app/?companyId=${companyId}`;
