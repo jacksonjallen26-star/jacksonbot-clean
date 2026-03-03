@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 function App() {
-  const [companyId] = useState("abc123"); // Replace with actual companyId
+  const [companyId, setCompanyId] = useState(null); // will read from URL
   const [botName, setBotName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#4f46e5");
   const [textColor, setTextColor] = useState("#ffffff");
@@ -11,33 +11,42 @@ function App() {
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-  // Fetch current settings from backend
+  // Step 1: Read companyId from URL
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("companyId");
+    if (id) setCompanyId(id);
+  }, []);
+
+  // Step 2: Fetch current settings from backend
+  useEffect(() => {
+    if (!companyId) return; // wait until companyId is set
     async function fetchSettings() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`);
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
+
         setBotName(data.botName || "");
         setPrimaryColor(data.primaryColor || "#4f46e5");
         setTextColor(data.textColor || "#ffffff");
         setLoading(false);
       } catch (err) {
         console.error("Error fetching settings:", err);
-        setMessage("Failed to load settings");
+        setMessage("Failed to load settings ❌");
         setLoading(false);
       }
     }
     fetchSettings();
   }, [companyId, BACKEND_URL]);
 
-  // Save updated settings
+  // Step 3: Save updated settings
   const handleSave = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/update-settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId, botName, primaryColor, textColor })
+        body: JSON.stringify({ companyId, botName, primaryColor, textColor }),
       });
       const data = await res.json();
       if (data.success) {
@@ -51,6 +60,7 @@ function App() {
     }
   };
 
+  if (!companyId) return <p>Loading company ID...</p>;
   if (loading) return <p>Loading settings...</p>;
 
   return (
@@ -89,7 +99,7 @@ function App() {
           color: textColor,
           border: "none",
           cursor: "pointer",
-          fontWeight: "bold"
+          fontWeight: "bold",
         }}
       >
         Save
