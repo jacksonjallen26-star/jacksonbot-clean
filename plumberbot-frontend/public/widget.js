@@ -1,87 +1,84 @@
 // public/widget.js
 (function() {
-  function injectBot({ containerSelector, companyId }) {
-    const container = document.querySelector(containerSelector);
+  const BACKEND_URL = "https://jacksonbot-clean-production.up.railway.app";
+
+  function initWidget({ companyId, containerId = "body" }) {
+    const container = document.querySelector(containerId);
     if (!container) return;
 
-    // Clear any existing content
-    container.innerHTML = '';
+    // ----------------- Create Floating Button -----------------
+    const chatButton = document.createElement("div");
+    chatButton.id = "chat-button";
+    chatButton.innerHTML = `<img src="jetai.png" alt="Chat Logo" />`;
+    container.appendChild(chatButton);
 
-    // Create floating button
-    const chatButton = document.createElement('div');
-    chatButton.id = 'chat-button';
-    chatButton.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 48px;
-      height: 48px;
-      background: transparent;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 1000;
-      transition: transform 0.3s;
-    `;
+    // ----------------- Create Chat Window -----------------
+    const chatWindow = document.createElement("div");
+    chatWindow.id = "chat-window";
 
-    const img = document.createElement('img');
-    img.src = 'jetai.png'; // replace with your logo
-    img.alt = 'Chat Logo';
-    img.style.cssText = 'width: 170%; height: 170%; object-fit: contain;';
-    chatButton.appendChild(img);
+    const chatIframe = document.createElement("iframe");
+    chatIframe.id = "chat-iframe";
+    chatIframe.src = `https://jacksonbot-clean.vercel.app/?companyId=${companyId}`;
+    chatWindow.appendChild(chatIframe);
 
-    // Create chat window
-    const chatWindow = document.createElement('div');
-    chatWindow.id = 'chat-window';
-    chatWindow.style.cssText = `
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      width: 400px;
-      height: 600px;
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transform: translateY(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      z-index: 1000;
-    `;
+    container.appendChild(chatWindow);
 
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://jacksonbot-clean.vercel.app/?companyId=${companyId}`;
-    iframe.id = 'chat-iframe';
-    iframe.style.cssText = 'flex:1; border:none; border-radius:8px;';
-    chatWindow.appendChild(iframe);
-
-    // Toggle chat window
-    chatButton.addEventListener('click', () => {
-      if (chatWindow.style.opacity === '1') {
-        chatWindow.style.opacity = '0';
-        chatWindow.style.pointerEvents = 'none';
-        chatWindow.style.transform = 'translateY(20px)';
-      } else {
-        chatWindow.style.opacity = '1';
-        chatWindow.style.pointerEvents = 'auto';
-        chatWindow.style.transform = 'translateY(0)';
-      }
+    // ----------------- Floating Button Toggle -----------------
+    chatButton.addEventListener("click", () => {
+      chatWindow.classList.toggle("active");
     });
 
-    // Append to document
-    document.body.appendChild(chatButton);
-    document.body.appendChild(chatWindow);
+    // ----------------- Load company settings -----------------
+    async function applyCompanyStyles() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`);
+        if (!res.ok) throw new Error("Failed to fetch settings");
+        const data = await res.json();
+
+        chatButton.style.boxShadow = `0 0 10px ${data.primaryColor || "#4f46e5"}`;
+        chatWindow.style.backgroundColor = data.primaryColor || "#ffffff";
+
+        chatIframe.onload = () => {
+          try {
+            const iframeDoc = chatIframe.contentDocument || chatIframe.contentWindow.document;
+            iframeDoc.documentElement.style.setProperty("--primary-color", data.primaryColor || "#4f46e5");
+            iframeDoc.documentElement.style.setProperty("--text-color", data.textColor || "#000000");
+          } catch (err) {
+            console.warn("Cannot access iframe styling:", err);
+          }
+        };
+      } catch (err) {
+        console.error("Error loading company settings:", err);
+      }
+    }
+
+    applyCompanyStyles();
+
+    // ----------------- Inject CSS -----------------
+    const style = document.createElement("style");
+    style.textContent = `
+      #chat-button {
+        position: fixed; bottom: 20px; right: 20px;
+        width: 48px; height: 48px; background: transparent;
+        border-radius: 50%; display: flex; justify-content: center; align-items: center;
+        cursor: pointer; z-index: 1000; transition: transform 0.3s, box-shadow 0.3s;
+      }
+      #chat-button:hover { transform: scale(1.1); }
+      #chat-button img { width: 170%; height: 170%; object-fit: contain; }
+      #chat-window {
+        position: fixed; bottom: 90px; right: 20px; width: 400px; height: 600px;
+        border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
+        transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        z-index: 1000; background: white;
+      }
+      #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+      #chat-iframe { flex: 1; border: none; }
+      @media(max-width:768px){
+        #chat-window { width:280px; height:400px; bottom:80px; right:20px; border-radius:12px; }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
-  // Expose global object
-  window.BotWidget = {
-    init: function({ container, companyId }) {
-      injectBot({ containerSelector: container, companyId });
-    }
-  };
+  window.BotWidget = { init: initWidget };
 })();
