@@ -21,8 +21,10 @@ const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   companyId: { type: String, required: true, unique: true },
 
-  // ✅ NEW: Editable from dashboard
+  // Editable from dashboard
   botName: { type: String, default: "Jet AI" },
+  primaryColor: { type: String, default: "#4f46e5" }, // default purple
+  textColor: { type: String, default: "#ffffff" },    // default white
 
   // SaaS controls
   active: { type: Boolean, default: true },
@@ -62,7 +64,6 @@ app.use(cors({
   ],
   methods: ["GET", "POST"]
 }));
-
 app.use(express.json());
 
 // =====================
@@ -77,25 +78,23 @@ app.get("/", (req, res) => {
 // =====================
 app.post("/api/update-settings", async (req, res) => {
   try {
-    const { companyId, botName } = req.body;
+    const { companyId, botName, primaryColor, textColor } = req.body;
 
-    if (!companyId) {
-      return res.status(400).json({ error: "companyId required" });
-    }
+    if (!companyId) return res.status(400).json({ error: "companyId required" });
 
     const updatedCompany = await Company.findOneAndUpdate(
-      { companyId: companyId },
-      { botName: botName },
+      { companyId },
+      { botName, primaryColor, textColor },
       { new: true }
     );
 
-    if (!updatedCompany) {
-      return res.status(404).json({ error: "Company not found" });
-    }
+    if (!updatedCompany) return res.status(404).json({ error: "Company not found" });
 
     res.json({
       success: true,
-      botName: updatedCompany.botName
+      botName: updatedCompany.botName,
+      primaryColor: updatedCompany.primaryColor,
+      textColor: updatedCompany.textColor
     });
 
   } catch (error) {
@@ -105,24 +104,20 @@ app.post("/api/update-settings", async (req, res) => {
 });
 
 // =====================
-// Get Settings Endpoint (NEW)
+// Get Settings Endpoint
 // =====================
 app.get("/api/get-settings", async (req, res) => {
   try {
     const { companyId } = req.query;
-
-    if (!companyId) {
-      return res.status(400).json({ error: "companyId required" });
-    }
+    if (!companyId) return res.status(400).json({ error: "companyId required" });
 
     const company = await Company.findOne({ companyId });
-
-    if (!company) {
-      return res.status(404).json({ error: "Company not found" });
-    }
+    if (!company) return res.status(404).json({ error: "Company not found" });
 
     res.json({
-      botName: company.botName
+      botName: company.botName,
+      primaryColor: company.primaryColor,
+      textColor: company.textColor
     });
 
   } catch (error) {
@@ -155,7 +150,6 @@ app.post("/chat", async (req, res) => {
     }));
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -183,19 +177,15 @@ app.post("/chat", async (req, res) => {
 // =====================
 app.get("/history", async (req, res) => {
   const { userId, companyId } = req.query;
-
   if (!userId || !companyId) return res.status(400).json([]);
 
   try {
-    const previousMessages = await Chat.find({ userId, companyId })
-      .sort({ timestamp: 1 });
-
+    const previousMessages = await Chat.find({ userId, companyId }).sort({ timestamp: 1 });
     res.json(previousMessages.map(msg => ({
       type: msg.role === "bot" ? "bot" : "user",
       text: msg.message,
       timestamp: msg.timestamp
     })));
-
   } catch (err) {
     console.error("Failed to load chat history:", err);
     res.status(500).json([]);
@@ -206,5 +196,4 @@ app.get("/history", async (req, res) => {
 // Start Server
 // =====================
 const PORT = process.env.PORT || 3001;
-
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,89 +1,101 @@
-import React, { useState, useEffect } from "react";
+// App.js
+import { useState, useEffect } from "react";
 
 function App() {
+  const [companyId] = useState("abc123"); // Replace with actual companyId
   const [botName, setBotName] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#4f46e5");
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
-  const companyId = "abc123"; // temporary hardcoded
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-  // 🔹 Load settings when page loads
+  // Fetch current settings from backend
   useEffect(() => {
-    const loadSettings = async () => {
+    async function fetchSettings() {
       try {
-        const response = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/api/get-settings?companyId=${companyId}`
-        );
-
-        const data = await response.json();
-
-        if (data.botName) {
-          setBotName(data.botName);
-        }
-
-      } catch (error) {
-        console.error("Error loading settings:", error);
+        const res = await fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setBotName(data.botName || "");
+        setPrimaryColor(data.primaryColor || "#4f46e5");
+        setTextColor(data.textColor || "#ffffff");
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+        setMessage("Failed to load settings");
+        setLoading(false);
       }
-    };
+    }
+    fetchSettings();
+  }, [companyId, BACKEND_URL]);
 
-    loadSettings();
-  }, []);
-
+  // Save updated settings
   const handleSave = async () => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/update-settings`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            companyId,
-            botName,
-          }),
-        }
-      );
-
-      await response.json();
-      alert("Saved to database!");
-
-    } catch (error) {
-      console.error("Error saving:", error);
-      alert("Error saving.");
+      const res = await fetch(`${BACKEND_URL}/api/update-settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId, botName, primaryColor, textColor })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage("Saved to database ✅");
+      } else {
+        setMessage("Save failed ❌");
+      }
+    } catch (err) {
+      console.error("Error saving settings:", err);
+      setMessage("Save failed ❌");
     }
   };
 
+  if (loading) return <p>Loading settings...</p>;
+
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Jet AI Dashboard</h1>
+    <div style={{ padding: 20, fontFamily: "Arial, sans-serif", maxWidth: 400 }}>
+      <h2>Company Dashboard</h2>
 
-      <div style={{ marginTop: "30px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>
-          Bot Name
-        </label>
+      <label>Bot Name:</label>
+      <input
+        type="text"
+        value={botName}
+        onChange={(e) => setBotName(e.target.value)}
+        style={{ width: "100%", marginBottom: 10, padding: 5 }}
+      />
 
-        <input
-          type="text"
-          value={botName}
-          onChange={(e) => setBotName(e.target.value)}
-          style={{
-            padding: "10px",
-            width: "300px",
-            fontSize: "16px",
-          }}
-        />
-      </div>
+      <label>Primary Color:</label>
+      <input
+        type="color"
+        value={primaryColor}
+        onChange={(e) => setPrimaryColor(e.target.value)}
+        style={{ width: "100%", marginBottom: 10, height: 40 }}
+      />
+
+      <label>Text Color:</label>
+      <input
+        type="color"
+        value={textColor}
+        onChange={(e) => setTextColor(e.target.value)}
+        style={{ width: "100%", marginBottom: 10, height: 40 }}
+      />
 
       <button
         onClick={handleSave}
         style={{
-          marginTop: "20px",
           padding: "10px 20px",
-          fontSize: "16px",
+          backgroundColor: primaryColor,
+          color: textColor,
+          border: "none",
           cursor: "pointer",
+          fontWeight: "bold"
         }}
       >
-        Save Changes
+        Save
       </button>
+
+      {message && <p style={{ marginTop: 10 }}>{message}</p>}
     </div>
   );
 }
