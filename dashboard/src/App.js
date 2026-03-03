@@ -1,7 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
   const [botName, setBotName] = useState("");
+
+  const companyId = "abc123"; // temporary hardcoded
+
+  // 🔹 Load settings when page loads
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/get-settings?companyId=${companyId}`
+        );
+
+        const data = await response.json();
+
+        if (data.botName) {
+          setBotName(data.botName);
+        }
+
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleSave = async () => {
     try {
@@ -13,19 +37,18 @@ function App() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            companyId: "abc123", // temporary hardcoded
-            botName: botName,
+            companyId,
+            botName,
           }),
         }
       );
 
-      const data = await response.json();
-      console.log("Server response:", data);
-
+      await response.json();
       alert("Saved to database!");
+
     } catch (error) {
       console.error("Error saving:", error);
-      alert("Error saving. Check console.");
+      alert("Error saving.");
     }
   };
 

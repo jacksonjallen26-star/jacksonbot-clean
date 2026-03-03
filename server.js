@@ -73,7 +73,7 @@ app.get("/", (req, res) => {
 });
 
 // =====================
-// ✅ Update Settings Endpoint (NEW)
+// Update Settings Endpoint
 // =====================
 app.post("/api/update-settings", async (req, res) => {
   try {
@@ -93,10 +93,40 @@ app.post("/api/update-settings", async (req, res) => {
       return res.status(404).json({ error: "Company not found" });
     }
 
-    res.json({ success: true, company: updatedCompany });
+    res.json({
+      success: true,
+      botName: updatedCompany.botName
+    });
 
   } catch (error) {
     console.error("Update Settings Error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// =====================
+// Get Settings Endpoint (NEW)
+// =====================
+app.get("/api/get-settings", async (req, res) => {
+  try {
+    const { companyId } = req.query;
+
+    if (!companyId) {
+      return res.status(400).json({ error: "companyId required" });
+    }
+
+    const company = await Company.findOne({ companyId });
+
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    res.json({
+      botName: company.botName
+    });
+
+  } catch (error) {
+    console.error("Get Settings Error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
