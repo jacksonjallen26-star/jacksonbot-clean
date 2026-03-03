@@ -4,12 +4,9 @@
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
-    // Clear existing content
     container.innerHTML = '';
 
-    // Create iframe
     const iframe = document.createElement('iframe');
-    // URL points to your React frontend and passes companyId as query param
     iframe.src = `https://jacksonbot-clean.vercel.app/?companyId=${companyId}`;
     iframe.style.width = '100%';
     iframe.style.height = '100%';
