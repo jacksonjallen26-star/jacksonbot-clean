@@ -37,7 +37,7 @@ const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   companyId: { type: String, required: true, unique: true },
 
-  // Branding / Theme
+  // Branding
   botName: { type: String, default: "Jet AI" },
   logoUrl: { type: String, default: "" },
 
@@ -47,10 +47,16 @@ const companySchema = new mongoose.Schema({
   textColor: { type: String, default: "#ffffff" },
   botBubbleColor: { type: String, default: "#2a2a2a" },
 
-  // AI Personality
+  // AI Behavior
   systemPrompt: {
     type: String,
     default: "You are Jet, a helpful and friendly AI assistant."
+  },
+
+  // NEW FIELD
+  openingMessage: {
+    type: String,
+    default: "Hi! 👋 How can I help you today?"
   },
 
   // SaaS Controls
@@ -83,7 +89,7 @@ app.get("/", (req, res) => {
 });
 
 // ===============================
-// CREATE COMPANY (Dashboard Use)
+// CREATE COMPANY
 // ===============================
 app.post("/api/create-company", async (req, res) => {
   try {
@@ -93,6 +99,7 @@ app.post("/api/create-company", async (req, res) => {
       return res.status(400).json({ error: "Name and companyId required" });
 
     const existing = await Company.findOne({ companyId });
+
     if (existing)
       return res.status(400).json({ error: "Company already exists" });
 
@@ -120,7 +127,8 @@ app.post("/api/update-settings", async (req, res) => {
       accentColor,
       textColor,
       botBubbleColor,
-      systemPrompt
+      systemPrompt,
+      openingMessage
     } = req.body;
 
     if (!companyId)
@@ -136,7 +144,8 @@ app.post("/api/update-settings", async (req, res) => {
         accentColor,
         textColor,
         botBubbleColor,
-        systemPrompt
+        systemPrompt,
+        openingMessage
       },
       { new: true }
     );
@@ -175,7 +184,8 @@ app.get("/api/get-settings", async (req, res) => {
       accentColor: company.accentColor,
       textColor: company.textColor,
       botBubbleColor: company.botBubbleColor,
-      systemPrompt: company.systemPrompt
+      systemPrompt: company.systemPrompt,
+      openingMessage: company.openingMessage
     });
 
   } catch (err) {
@@ -188,12 +198,14 @@ app.get("/api/get-settings", async (req, res) => {
 // CHAT ENDPOINT
 // ===============================
 app.post("/chat", async (req, res) => {
+
   const { message, userId, companyId } = req.body;
 
   if (!message || !userId || !companyId)
     return res.status(400).json({ reply: "Missing required fields." });
 
   try {
+
     const company = await Company.findOne({ companyId });
 
     if (!company)
@@ -211,7 +223,9 @@ app.post("/chat", async (req, res) => {
       content: msg.message
     }));
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -233,18 +247,21 @@ app.post("/chat", async (req, res) => {
     console.error("Chat Error:", err);
     res.status(500).json({ reply: "Jet is having trouble right now." });
   }
+
 });
 
 // ===============================
 // LOAD CHAT HISTORY
 // ===============================
 app.get("/history", async (req, res) => {
+
   const { userId, companyId } = req.query;
 
   if (!userId || !companyId)
     return res.status(400).json([]);
 
   try {
+
     const messages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 });
 
@@ -258,6 +275,7 @@ app.get("/history", async (req, res) => {
     console.error("History Error:", err);
     res.status(500).json([]);
   }
+
 });
 
 // ===============================

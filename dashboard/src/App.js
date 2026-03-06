@@ -12,6 +12,7 @@ function App() {
   const [textColor, setTextColor] = useState("#ffffff");
   const [botBubbleColor, setBotBubbleColor] = useState("#2a2a2a");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [openingMessage, setOpeningMessage] = useState("");
   const [status, setStatus] = useState("");
 
   // =============================
@@ -46,6 +47,7 @@ function App() {
         setTextColor(data.textColor || "#ffffff");
         setBotBubbleColor(data.botBubbleColor || "#2a2a2a");
         setSystemPrompt(data.systemPrompt || "");
+        setOpeningMessage(data.openingMessage || "");
       } catch (err) {
         console.error("Error loading settings:", err);
       }
@@ -73,14 +75,14 @@ function App() {
           accentColor,
           textColor,
           botBubbleColor,
-          systemPrompt
+          systemPrompt,
+          openingMessage
         })
       });
 
       if (!res.ok) throw new Error("Save failed");
 
       setStatus("✅ Saved successfully!");
-
     } catch (err) {
       console.error("Save error:", err);
       setStatus("❌ Failed to save.");
@@ -92,34 +94,67 @@ function App() {
   }
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial" }}>
+    <div style={{ padding: 40, fontFamily: "Arial", maxWidth: 500 }}>
       <h2>Dashboard for: {companyId}</h2>
 
       <label>Bot Name</label>
-      <input value={botName} onChange={e => setBotName(e.target.value)} />
+      <input
+        value={botName}
+        onChange={(e) => setBotName(e.target.value)}
+      />
 
       <label>Logo URL</label>
-      <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} />
+      <input
+        value={logoUrl}
+        onChange={(e) => setLogoUrl(e.target.value)}
+      />
 
       <label>Primary Color</label>
-      <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} />
+      <input
+        type="color"
+        value={primaryColor}
+        onChange={(e) => setPrimaryColor(e.target.value)}
+      />
 
       <label>Secondary Color</label>
-      <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} />
+      <input
+        type="color"
+        value={secondaryColor}
+        onChange={(e) => setSecondaryColor(e.target.value)}
+      />
 
       <label>Accent Color</label>
-      <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} />
+      <input
+        type="color"
+        value={accentColor}
+        onChange={(e) => setAccentColor(e.target.value)}
+      />
 
       <label>Text Color</label>
-      <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} />
+      <input
+        type="color"
+        value={textColor}
+        onChange={(e) => setTextColor(e.target.value)}
+      />
 
       <label>Bot Bubble Color</label>
-      <input type="color" value={botBubbleColor} onChange={e => setBotBubbleColor(e.target.value)} />
+      <input
+        type="color"
+        value={botBubbleColor}
+        onChange={(e) => setBotBubbleColor(e.target.value)}
+      />
+
+      <label>Opening Message</label>
+      <textarea
+        value={openingMessage}
+        onChange={(e) => setOpeningMessage(e.target.value)}
+        rows={3}
+      />
 
       <label>System Prompt</label>
       <textarea
         value={systemPrompt}
-        onChange={e => setSystemPrompt(e.target.value)}
+        onChange={(e) => setSystemPrompt(e.target.value)}
         rows={4}
       />
 
