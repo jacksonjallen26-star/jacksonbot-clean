@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 function App() {
+
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const [botName, setBotName] = useState("Jet AI");
   const [logo, setLogo] = useState("/logo.png");
+  const [openingMessage, setOpeningMessage] = useState("");
+
   const chatEndRef = useRef(null);
 
   // =========================
@@ -29,6 +32,7 @@ function App() {
   // Persistent userId
   // =========================
   let userId = localStorage.getItem("jetUserId");
+
   if (!userId) {
     userId = crypto.randomUUID();
     localStorage.setItem("jetUserId", userId);
@@ -38,8 +42,11 @@ function App() {
   // LOAD COMPANY SETTINGS
   // =========================
   useEffect(() => {
+
     const loadSettings = async () => {
+
       try {
+
         const res = await fetch(
           `${process.env.REACT_APP_BACKEND_URL}/api/get-settings?companyId=${companyId}`
         );
@@ -48,7 +55,7 @@ function App() {
 
         const data = await res.json();
 
-        // Apply CSS variables dynamically
+        // Apply CSS variables
         document.documentElement.style.setProperty("--primary-color", data.primaryColor);
         document.documentElement.style.setProperty("--secondary-color", data.secondaryColor);
         document.documentElement.style.setProperty("--accent-color", data.accentColor);
@@ -59,20 +66,30 @@ function App() {
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
 
+        // NEW
+        if (data.openingMessage) {
+          setOpeningMessage(data.openingMessage);
+        }
+
       } catch (err) {
         console.error("Failed to load settings:", err);
       }
+
     };
 
     loadSettings();
+
   }, [companyId]);
 
   // =========================
   // LOAD CHAT HISTORY
   // =========================
   useEffect(() => {
+
     const loadHistory = async () => {
+
       try {
+
         const res = await fetch(
           `${process.env.REACT_APP_BACKEND_URL}/history?userId=${userId}&companyId=${companyId}`
         );
@@ -80,14 +97,34 @@ function App() {
         if (!res.ok) return;
 
         const data = await res.json();
-        setMessages(data);
+
+        // If history exists → load it
+        if (data.length > 0) {
+          setMessages(data);
+        }
+
+        // If NO history → show opening message
+        else if (openingMessage) {
+
+          setMessages([
+            {
+              type: "bot",
+              text: openingMessage,
+              timestamp: new Date()
+            }
+          ]);
+
+        }
+
       } catch (err) {
         console.error("Failed to load history");
       }
+
     };
 
     loadHistory();
-  }, [companyId, userId]);
+
+  }, [companyId, userId, openingMessage]);
 
   // =========================
   // Scroll to bottom
@@ -100,6 +137,7 @@ function App() {
   // Send Message
   // =========================
   const sendMessage = async () => {
+
     if (!input.trim()) return;
 
     const userMessage = {
@@ -109,10 +147,12 @@ function App() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+
     setInput("");
     setTyping(true);
 
     try {
+
       const res = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/chat`,
         {
@@ -137,6 +177,7 @@ function App() {
       setMessages(prev => [...prev, botMessage]);
 
     } catch {
+
       setMessages(prev => [
         ...prev,
         {
@@ -145,9 +186,11 @@ function App() {
           timestamp: new Date()
         }
       ]);
+
     }
 
     setTyping(false);
+
   };
 
   const handleKeyPress = e => {
@@ -163,37 +206,50 @@ function App() {
 
   return (
     <div className={isWidget ? "widget-mode" : "neon-wrapper"}>
+
       <div className="chat-container">
+
         <div className="chat-header">
           <img src={logo} alt="Bot Logo" className="chat-logo" />
           <span className="chat-title">{botName}</span>
         </div>
 
         <div id="chat">
+
           {messages.map((msg, i) => (
+
             <div key={i} className={`message ${msg.type}`}>
               {msg.text}
+
               <div className="timestamp">
                 {formatTime(new Date(msg.timestamp))}
               </div>
+
             </div>
+
           ))}
 
           {typing && (
+
             <div className="message bot">
+
               <div className="typing">
                 <span>{botName} is typing</span>
                 <span className="dot"></span>
                 <span className="dot"></span>
                 <span className="dot"></span>
               </div>
+
             </div>
+
           )}
 
           <div ref={chatEndRef} />
+
         </div>
 
         <div className="input-container">
+
           <input
             type="text"
             placeholder={`Ask ${botName}...`}
@@ -201,11 +257,16 @@ function App() {
             onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
           />
+
           <button onClick={sendMessage}>Send</button>
+
         </div>
+
       </div>
+
     </div>
   );
+
 }
 
 export default App;
