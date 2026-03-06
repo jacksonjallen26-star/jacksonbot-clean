@@ -1,60 +1,65 @@
-// App.js
 import { useState, useEffect } from "react";
-import "./App.css";
 
 function App() {
-  const [companyId, setCompanyId] = useState("");
-  const [botName, setBotName] = useState("Jet AI");
-  const [primaryColor, setPrimaryColor] = useState("#4f46e5");
-  const [textColor, setTextColor] = useState("#ffffff");
-  const [buttonColor, setButtonColor] = useState("#00c3ff");
-  const [accentColor, setAccentColor] = useState("#ff00ff");
-  const [logoUrl, setLogoUrl] = useState("/logo.png");
-  const [systemPrompt, setSystemPrompt] = useState("You are Jet, a helpful AI.");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi! I’m Jet. How can I help you today?");
-  const [footerText, setFooterText] = useState("");
-  const [active, setActive] = useState(true);
-  const [plan, setPlan] = useState("starter");
-  const [statusMessage, setStatusMessage] = useState("");
-
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+  const [companyId, setCompanyId] = useState("");
+  const [botName, setBotName] = useState("Jet AI");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#4f46e5");
+  const [secondaryColor, setSecondaryColor] = useState("#6366f1");
+  const [accentColor, setAccentColor] = useState("#4338ca");
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [botBubbleColor, setBotBubbleColor] = useState("#2a2a2a");
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [status, setStatus] = useState("");
+
+  // =============================
   // Get companyId from URL
+  // =============================
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("companyId");
     if (id) setCompanyId(id);
   }, []);
 
-  // Fetch company settings
+  // =============================
+  // Load Company Settings
+  // =============================
   useEffect(() => {
     if (!companyId) return;
+
     async function fetchSettings() {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        const res = await fetch(
+          `${BACKEND_URL}/api/get-settings?companyId=${companyId}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch settings");
+
         const data = await res.json();
+
         setBotName(data.botName || "Jet AI");
+        setLogoUrl(data.logoUrl || "");
         setPrimaryColor(data.primaryColor || "#4f46e5");
+        setSecondaryColor(data.secondaryColor || "#6366f1");
+        setAccentColor(data.accentColor || "#4338ca");
         setTextColor(data.textColor || "#ffffff");
-        setButtonColor(data.buttonColor || "#00c3ff");
-        setAccentColor(data.accentColor || "#ff00ff");
-        setLogoUrl(data.logoUrl || "/logo.png");
-        setSystemPrompt(data.systemPrompt || "You are Jet, a helpful AI.");
-        setWelcomeMessage(data.welcomeMessage || "Hi! I’m Jet. How can I help you today?");
-        setFooterText(data.footerText || "");
-        setActive(data.active ?? true);
-        setPlan(data.plan || "starter");
+        setBotBubbleColor(data.botBubbleColor || "#2a2a2a");
+        setSystemPrompt(data.systemPrompt || "");
       } catch (err) {
-        console.error("Failed to load company settings:", err);
+        console.error("Error loading settings:", err);
       }
     }
+
     fetchSettings();
   }, [companyId, BACKEND_URL]);
 
-  // Save settings
+  // =============================
+  // Save Settings
+  // =============================
   const saveSettings = async () => {
-    if (!companyId) return;
+    setStatus("Saving...");
+
     try {
       const res = await fetch(`${BACKEND_URL}/api/update-settings`, {
         method: "POST",
@@ -62,77 +67,67 @@ function App() {
         body: JSON.stringify({
           companyId,
           botName,
-          primaryColor,
-          textColor,
-          buttonColor,
-          accentColor,
           logoUrl,
-          systemPrompt,
-          welcomeMessage,
-          footerText,
-          active,
-          plan,
-        }),
+          primaryColor,
+          secondaryColor,
+          accentColor,
+          textColor,
+          botBubbleColor,
+          systemPrompt
+        })
       });
-      const data = await res.json();
-      if (data.success) {
-        setStatusMessage("Settings saved successfully!");
-        setTimeout(() => setStatusMessage(""), 3000);
-      } else {
-        setStatusMessage("Failed to save settings.");
-      }
+
+      if (!res.ok) throw new Error("Save failed");
+
+      setStatus("✅ Saved successfully!");
+
     } catch (err) {
       console.error("Save error:", err);
-      setStatusMessage("Error saving settings.");
+      setStatus("❌ Failed to save.");
     }
   };
 
+  if (!companyId) {
+    return <div style={{ padding: 40 }}>No companyId in URL.</div>;
+  }
+
   return (
-    <div className="dashboard-container">
-      <div className="settings-panel">
-        <h2>Bot Configuration</h2>
+    <div style={{ padding: 40, fontFamily: "Arial" }}>
+      <h2>Dashboard for: {companyId}</h2>
 
-        <label>Bot Name</label>
-        <input value={botName} onChange={e => setBotName(e.target.value)} />
+      <label>Bot Name</label>
+      <input value={botName} onChange={e => setBotName(e.target.value)} />
 
-        <label>Primary Color</label>
-        <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} />
+      <label>Logo URL</label>
+      <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} />
 
-        <label>Text Color</label>
-        <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} />
+      <label>Primary Color</label>
+      <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} />
 
-        <label>Button Color</label>
-        <input type="color" value={buttonColor} onChange={e => setButtonColor(e.target.value)} />
+      <label>Secondary Color</label>
+      <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} />
 
-        <label>Accent Color</label>
-        <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} />
+      <label>Accent Color</label>
+      <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} />
 
-        <label>Logo URL</label>
-        <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} />
+      <label>Text Color</label>
+      <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} />
 
-        <label>System Prompt</label>
-        <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} />
+      <label>Bot Bubble Color</label>
+      <input type="color" value={botBubbleColor} onChange={e => setBotBubbleColor(e.target.value)} />
 
-        <label>Welcome Message</label>
-        <textarea value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} />
+      <label>System Prompt</label>
+      <textarea
+        value={systemPrompt}
+        onChange={e => setSystemPrompt(e.target.value)}
+        rows={4}
+      />
 
-        <label>Footer Text</label>
-        <textarea value={footerText} onChange={e => setFooterText(e.target.value)} />
+      <br /><br />
 
-        <label>
-          <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Bot Active
-        </label>
+      <button onClick={saveSettings}>Save Settings</button>
 
-        <label>Plan</label>
-        <select value={plan} onChange={e => setPlan(e.target.value)}>
-          <option value="starter">Starter</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
-
-        <button className="save-btn" onClick={saveSettings}>Save Changes</button>
-        {statusMessage && <p className="status">{statusMessage}</p>}
-      </div>
+      <div style={{ marginTop: 20 }}>{status}</div>
     </div>
   );
 }

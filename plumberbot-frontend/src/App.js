@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 
@@ -6,69 +5,102 @@ function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
-  const [settings, setSettings] = useState({
-    botName: "Jet AI",
-    primaryColor: "#4f46e5",
-    textColor: "#ffffff",
-    buttonColor: "#00c3ff",
-    accentColor: "#ff00ff",
-    logoUrl: "/logo.png",
-    systemPrompt: "You are Jet, a helpful and friendly AI assistant.",
-    welcomeMessage: "Hi! I’m Jet. How can I help you today?",
-    footerText: "",
-    active: true,
-    plan: "starter"
-  });
-
+  const [botName, setBotName] = useState("Jet AI");
+  const [logo, setLogo] = useState("/logo.png");
   const chatEndRef = useRef(null);
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-  // ✅ Dynamically read companyId from iframe URL
+  // =========================
+  // Detect companyId
+  // =========================
   const params = new URLSearchParams(window.location.search);
   const companyId = params.get("companyId") || "default";
 
+  // =========================
   // Detect widget mode
+  // =========================
   let isWidget = false;
   try {
     isWidget = window.self !== window.top;
-  } catch (e) {
+  } catch {
     isWidget = true;
   }
 
-  // ===== Generate or load a unique userId per visitor =====
+  // =========================
+  // Persistent userId
+  // =========================
   let userId = localStorage.getItem("jetUserId");
   if (!userId) {
     userId = crypto.randomUUID();
     localStorage.setItem("jetUserId", userId);
   }
 
-  // Fetch company settings
+  // =========================
+  // LOAD COMPANY SETTINGS
+  // =========================
   useEffect(() => {
-    async function fetchSettings() {
+    const loadSettings = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`);
-        if (!res.ok) throw new Error("Failed to fetch settings");
+        const res = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/get-settings?companyId=${companyId}`
+        );
+
+        if (!res.ok) return;
+
         const data = await res.json();
-        setSettings(prev => ({ ...prev, ...data }));
-        // Optionally show welcome message
-        if (data.welcomeMessage) {
-          setMessages([{ type: "bot", text: data.welcomeMessage, timestamp: new Date() }]);
-        }
+
+        // Apply CSS variables dynamically
+        document.documentElement.style.setProperty("--primary-color", data.primaryColor);
+        document.documentElement.style.setProperty("--secondary-color", data.secondaryColor);
+        document.documentElement.style.setProperty("--accent-color", data.accentColor);
+        document.documentElement.style.setProperty("--text-color", data.textColor);
+        document.documentElement.style.setProperty("--bot-bubble-color", data.botBubbleColor);
+        document.documentElement.style.setProperty("--glow-color", data.secondaryColor);
+
+        if (data.botName) setBotName(data.botName);
+        if (data.logoUrl) setLogo(data.logoUrl);
+
       } catch (err) {
         console.error("Failed to load settings:", err);
       }
-    }
-    fetchSettings();
-  }, [companyId, BACKEND_URL]);
+    };
 
-  // Scroll to bottom when messages change
+    loadSettings();
+  }, [companyId]);
+
+  // =========================
+  // LOAD CHAT HISTORY
+  // =========================
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/history?userId=${userId}&companyId=${companyId}`
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setMessages(data);
+      } catch (err) {
+        console.error("Failed to load history");
+      }
+    };
+
+    loadHistory();
+  }, [companyId, userId]);
+
+  // =========================
+  // Scroll to bottom
+  // =========================
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  // ===== Send a message =====
+  // =========================
+  // Send Message
+  // =========================
   const sendMessage = async () => {
-    if (!input.trim() || !settings.active) return;
+    if (!input.trim()) return;
 
     const userMessage = {
       type: "user",
@@ -81,15 +113,18 @@ function App() {
     setTyping(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input,
-          userId,
-          companyId
-        }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/chat`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: input,
+            userId,
+            companyId
+          })
+        }
+      );
 
       const data = await res.json();
 
@@ -101,10 +136,14 @@ function App() {
 
       setMessages(prev => [...prev, botMessage]);
 
-    } catch (err) {
+    } catch {
       setMessages(prev => [
         ...prev,
-        { type: "bot", text: "Jet is having trouble right now.", timestamp: new Date() }
+        {
+          type: "bot",
+          text: "Jet is having trouble right now.",
+          timestamp: new Date()
+        }
       ]);
     }
 
@@ -124,38 +163,26 @@ function App() {
 
   return (
     <div className={isWidget ? "widget-mode" : "neon-wrapper"}>
-      <div
-        className="chat-container"
-        style={{ backgroundColor: settings.primaryColor, color: settings.textColor }}
-      >
-        {/* Header */}
+      <div className="chat-container">
         <div className="chat-header">
-          <img src={settings.logoUrl} alt="Logo" className="chat-logo" />
-          <span className="chat-title" style={{ color: settings.accentColor }}>
-            {settings.botName}
-          </span>
+          <img src={logo} alt="Bot Logo" className="chat-logo" />
+          <span className="chat-title">{botName}</span>
         </div>
 
-        {/* Chat Messages */}
         <div id="chat">
           {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`message ${msg.type}`}
-              style={{
-                backgroundColor: msg.type === "user" ? settings.buttonColor : "#383838",
-                color: msg.type === "user" ? "#fff" : settings.textColor
-              }}
-            >
+            <div key={i} className={`message ${msg.type}`}>
               {msg.text}
-              <div className="timestamp">{formatTime(msg.timestamp)}</div>
+              <div className="timestamp">
+                {formatTime(new Date(msg.timestamp))}
+              </div>
             </div>
           ))}
 
           {typing && (
             <div className="message bot">
               <div className="typing">
-                <span>{settings.botName} is typing</span>
+                <span>{botName} is typing</span>
                 <span className="dot"></span>
                 <span className="dot"></span>
                 <span className="dot"></span>
@@ -166,29 +193,16 @@ function App() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input */}
         <div className="input-container">
           <input
             type="text"
-            placeholder={`Ask ${settings.botName}...`}
+            placeholder={`Ask ${botName}...`}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
           />
-          <button
-            onClick={sendMessage}
-            style={{ backgroundColor: settings.buttonColor }}
-          >
-            Send
-          </button>
+          <button onClick={sendMessage}>Send</button>
         </div>
-
-        {/* Footer */}
-        {settings.footerText && (
-          <div className="chat-footer" style={{ color: settings.accentColor }}>
-            {settings.footerText}
-          </div>
-        )}
       </div>
     </div>
   );
