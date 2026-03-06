@@ -35,6 +35,7 @@ function App() {
         const res = await fetch(
           `${BACKEND_URL}/api/get-settings?companyId=${companyId}`
         );
+
         if (!res.ok) throw new Error("Failed to fetch settings");
 
         const data = await res.json();
@@ -48,6 +49,7 @@ function App() {
         setBotBubbleColor(data.botBubbleColor || "#2a2a2a");
         setSystemPrompt(data.systemPrompt || "");
         setOpeningMessage(data.openingMessage || "");
+
       } catch (err) {
         console.error("Error loading settings:", err);
       }
@@ -94,75 +96,80 @@ function App() {
   }
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial", maxWidth: 500 }}>
+    <div style={{ padding: 40, fontFamily: "Arial", maxWidth: 600 }}>
+
       <h2>Dashboard for: {companyId}</h2>
 
       <label>Bot Name</label>
       <input
         value={botName}
-        onChange={(e) => setBotName(e.target.value)}
+        onChange={e => setBotName(e.target.value)}
       />
 
       <label>Logo URL</label>
       <input
         value={logoUrl}
-        onChange={(e) => setLogoUrl(e.target.value)}
+        onChange={e => setLogoUrl(e.target.value)}
       />
 
       <label>Primary Color</label>
       <input
         type="color"
         value={primaryColor}
-        onChange={(e) => setPrimaryColor(e.target.value)}
+        onChange={e => setPrimaryColor(e.target.value)}
       />
 
       <label>Secondary Color</label>
       <input
         type="color"
         value={secondaryColor}
-        onChange={(e) => setSecondaryColor(e.target.value)}
+        onChange={e => setSecondaryColor(e.target.value)}
       />
 
       <label>Accent Color</label>
       <input
         type="color"
         value={accentColor}
-        onChange={(e) => setAccentColor(e.target.value)}
+        onChange={e => setAccentColor(e.target.value)}
       />
 
       <label>Text Color</label>
       <input
         type="color"
         value={textColor}
-        onChange={(e) => setTextColor(e.target.value)}
+        onChange={e => setTextColor(e.target.value)}
       />
 
       <label>Bot Bubble Color</label>
       <input
         type="color"
         value={botBubbleColor}
-        onChange={(e) => setBotBubbleColor(e.target.value)}
-      />
-
-      <label>Opening Message</label>
-      <textarea
-        value={openingMessage}
-        onChange={(e) => setOpeningMessage(e.target.value)}
-        rows={3}
+        onChange={e => setBotBubbleColor(e.target.value)}
       />
 
       <label>System Prompt</label>
       <textarea
         value={systemPrompt}
-        onChange={(e) => setSystemPrompt(e.target.value)}
+        onChange={e => setSystemPrompt(e.target.value)}
         rows={4}
+      />
+
+      <label>Opening Message</label>
+      <textarea
+        value={openingMessage}
+        onChange={e => setOpeningMessage(e.target.value)}
+        rows={3}
+        placeholder="Example: Hi! How can we help you today?"
       />
 
       <br /><br />
 
-      <button onClick={saveSettings}>Save Settings</button>
+      <button onClick={saveSettings}>
+        Save Settings
+      </button>
 
       <div style={{ marginTop: 20 }}>{status}</div>
+
     </div>
   );
 }
