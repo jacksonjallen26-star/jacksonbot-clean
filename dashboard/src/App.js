@@ -16,8 +16,6 @@ function App() {
   const [typing, setTyping] = useState(false);
   const [botName, setBotName] = useState("Jet AI");
   const [logo, setLogo] = useState("/logo.png");
-  const [openingMessage, setOpeningMessage] = useState("");
-
   const chatEndRef = useRef(null);
 
   // =========================
@@ -47,7 +45,6 @@ function App() {
 
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
-        if (data.openingMessage) setOpeningMessage(data.openingMessage);
 
         // Show opening message if available
         if (data.openingMessage) {
