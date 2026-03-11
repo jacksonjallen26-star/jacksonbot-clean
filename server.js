@@ -1,365 +1,270 @@
-require("dotenv").config();
-
+// ===============================
+// IMPORTS
+// ===============================
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const multer = require("multer");
-const pdfParse = require("pdf-parse");
 const OpenAI = require("openai");
+require("dotenv").config();
 
 const app = express();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// ===============================
+// MIDDLEWARE
+// ===============================
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: [
-      "https://jacksonbot-clean.vercel.app",
-      "http://localhost:3000"
-    ]
-  })
-);
+app.use(cors({
+  origin: [
+    "https://jacksonbot-clean.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+  ],
+  methods: ["GET", "POST"]
+}));
 
+// ===============================
+// MONGODB CONNECTION
+// ===============================
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
 
-
-// ========================
-// MongoDB
-// ========================
-
-mongoose.connect(process.env.MONGODB_URI);
-
-
-
-// ========================
-// Schemas
-// ========================
-
+// ===============================
+// COMPANY SCHEMA (SaaS Core)
+// ===============================
 const companySchema = new mongoose.Schema({
-  companyId: String,
-  name: String,
-  botName: String,
-  systemPrompt: String,
-  openingMessage: String,
-  primaryColor: String,
-  secondaryColor: String,
-  accentColor: String,
-  textColor: String,
-  botBubbleColor: String,
-  active: Boolean
+  name: { type: String, required: true },
+  companyId: { type: String, required: true, unique: true },
+
+  // Branding / Theme
+  botName: { type: String, default: "Jet AI" },
+  logoUrl: { type: String, default: "" },
+
+  primaryColor: { type: String, default: "#4f46e5" },
+  secondaryColor: { type: String, default: "#6366f1" },
+  accentColor: { type: String, default: "#4338ca" },
+  textColor: { type: String, default: "#ffffff" },
+  botBubbleColor: { type: String, default: "#2a2a2a" },
+
+  // AI Personality
+  systemPrompt: {
+    type: String,
+    default: "You are Jet, a helpful and friendly AI assistant."
+  },
+
+  // SaaS Controls
+  active: { type: Boolean, default: true },
+  plan: { type: String, default: "starter" },
+
+  createdAt: { type: Date, default: Date.now }
 });
 
 const Company = mongoose.model("Company", companySchema);
 
-
-
+// ===============================
+// CHAT HISTORY SCHEMA
+// ===============================
 const chatSchema = new mongoose.Schema({
-  userId: String,
-  companyId: String,
-  role: String,
-  message: String,
+  userId: { type: String, required: true },
+  companyId: { type: String, required: true },
+  role: { type: String, required: true },
+  message: { type: String, required: true },
   timestamp: { type: Date, default: Date.now }
 });
 
 const Chat = mongoose.model("Chat", chatSchema);
 
-
-
-const pdfChunkSchema = new mongoose.Schema({
-  companyId: String,
-  chunk: String,
-  vector: [Number]
-});
-
-const PdfChunk = mongoose.model("PdfChunk", pdfChunkSchema);
-
-
-
-// ========================
-// Cosine Similarity
-// ========================
-
-function cosineSimilarity(a, b) {
-  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
-
-  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-
-  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-
-  return dot / (magA * magB);
-}
-
-
-
-// ========================
-// Multer (memory storage)
-// ========================
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-
-
-// ========================
-// Health check
-// ========================
-
+// ===============================
+// HEALTH CHECK
+// ===============================
 app.get("/", (req, res) => {
-  res.send("Backend running");
+  res.send("🚀 Backend is running");
 });
 
-
-
-// ========================
-// Get company settings
-// ========================
-
-app.get("/api/get-settings", async (req, res) => {
-
-  const { companyId } = req.query;
-
-  const company = await Company.findOne({ companyId });
-
-  if (!company) return res.json({});
-
-  res.json(company);
-});
-
-
-
-// ========================
-// Upload PDF
-// ========================
-
-app.post("/api/upload-pdf", upload.single("pdf"), async (req, res) => {
-
+// ===============================
+// CREATE COMPANY (Dashboard Use)
+// ===============================
+app.post("/api/create-company", async (req, res) => {
   try {
+    const { name, companyId } = req.body;
 
-    const { companyId } = req.body;
+    if (!name || !companyId)
+      return res.status(400).json({ error: "Name and companyId required" });
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+    const existing = await Company.findOne({ companyId });
+    if (existing)
+      return res.status(400).json({ error: "Company already exists" });
 
-    const pdfData = await pdfParse(req.file.buffer);
+    const newCompany = await Company.create({ name, companyId });
 
-    const text = pdfData.text;
-
-    if (!text || text.length < 10) {
-      return res.status(400).json({ error: "PDF contains no readable text" });
-    }
-
-
-
-    // Split text into chunks
-    const chunkSize = 500;
-
-    const chunks = [];
-
-    for (let i = 0; i < text.length; i += chunkSize) {
-      chunks.push(text.substring(i, i + chunkSize));
-    }
-
-
-
-    for (const chunk of chunks) {
-
-      const embeddingResponse = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: chunk
-      });
-
-      const vector = embeddingResponse.data[0].embedding;
-
-      await PdfChunk.create({
-        companyId,
-        chunk,
-        vector
-      });
-
-    }
-
-    res.json({
-      success: true,
-      chunksStored: chunks.length
-    });
+    res.json({ success: true, company: newCompany });
 
   } catch (err) {
-
-    console.error(err);
-
-    res.status(500).json({
-      error: "Failed to process PDF"
-    });
-
+    console.error("Create Company Error:", err);
+    res.status(500).json({ error: "Server error" });
   }
-
 });
 
-
-
-// ========================
-// Chat endpoint
-// ========================
-
-app.post("/chat", async (req, res) => {
-
+// ===============================
+// UPDATE COMPANY SETTINGS
+// ===============================
+app.post("/api/update-settings", async (req, res) => {
   try {
+    const {
+      companyId,
+      botName,
+      logoUrl,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      textColor,
+      botBubbleColor,
+      systemPrompt
+    } = req.body;
 
-    const { message, userId, companyId } = req.body;
+    if (!companyId)
+      return res.status(400).json({ error: "companyId required" });
+
+    const updatedCompany = await Company.findOneAndUpdate(
+      { companyId },
+      {
+        botName,
+        logoUrl,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        textColor,
+        botBubbleColor,
+        systemPrompt
+      },
+      { new: true }
+    );
+
+    if (!updatedCompany)
+      return res.status(404).json({ error: "Company not found" });
+
+    res.json({ success: true, settings: updatedCompany });
+
+  } catch (err) {
+    console.error("Update Settings Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// GET COMPANY SETTINGS (Widget)
+// ===============================
+app.get("/api/get-settings", async (req, res) => {
+  try {
+    const { companyId } = req.query;
+
+    if (!companyId)
+      return res.status(400).json({ error: "companyId required" });
 
     const company = await Company.findOne({ companyId });
 
-    if (!company) {
-      return res.json({ reply: "Company not found." });
-    }
+    if (!company)
+      return res.status(404).json({ error: "Company not found" });
 
+    res.json({
+      botName: company.botName,
+      logoUrl: company.logoUrl,
+      primaryColor: company.primaryColor,
+      secondaryColor: company.secondaryColor,
+      accentColor: company.accentColor,
+      textColor: company.textColor,
+      botBubbleColor: company.botBubbleColor,
+      systemPrompt: company.systemPrompt
+    });
 
+  } catch (err) {
+    console.error("Get Settings Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
-    // Load history
-    const history = await Chat.find({
-      userId,
-      companyId
-    })
+// ===============================
+// CHAT ENDPOINT
+// ===============================
+app.post("/chat", async (req, res) => {
+  const { message, userId, companyId } = req.body;
+
+  if (!message || !userId || !companyId)
+    return res.status(400).json({ reply: "Missing required fields." });
+
+  try {
+    const company = await Company.findOne({ companyId });
+
+    if (!company)
+      return res.status(400).json({ reply: "Invalid company." });
+
+    if (!company.active)
+      return res.status(403).json({ reply: "Subscription inactive." });
+
+    const previousMessages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 })
       .limit(10);
 
-
-
-    const historyMessages = history.map((msg) => ({
+    const history = previousMessages.map(msg => ({
       role: msg.role === "bot" ? "assistant" : "user",
       content: msg.message
     }));
 
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-
-    // Embed user question
-    const userEmbeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: message
-    });
-
-    const userEmbedding = userEmbeddingResponse.data[0].embedding;
-
-
-
-    // Get company PDF chunks
-    const chunks = await PdfChunk.find({ companyId });
-
-
-
-    // Score chunks
-    const scored = chunks.map((c) => ({
-      text: c.chunk,
-      score: cosineSimilarity(userEmbedding, c.vector)
-    }));
-
-
-
-    scored.sort((a, b) => b.score - a.score);
-
-
-
-    const topChunks = scored.slice(0, 5).map((c) => c.text);
-
-
-
-    // Build system prompt
-    let systemPrompt = company.systemPrompt || "You are a helpful assistant.";
-
-    if (topChunks.length > 0) {
-
-      systemPrompt +=
-        "\n\nReference information from company documents:\n" +
-        topChunks.join("\n---\n");
-
-    }
-
-
-
-    // Chat completion
     const completion = await openai.chat.completions.create({
-
       model: "gpt-4o-mini",
-
       messages: [
-        { role: "system", content: systemPrompt },
-        ...historyMessages,
+        { role: "system", content: company.systemPrompt },
+        ...history,
         { role: "user", content: message }
       ]
-
     });
 
+    const botReply = completion.choices[0].message.content;
 
+    await Chat.create({ userId, companyId, role: "user", message });
+    await Chat.create({ userId, companyId, role: "bot", message: botReply });
 
-    const reply = completion.choices[0].message.content;
-
-
-
-    // Save history
-    await Chat.create({
-      userId,
-      companyId,
-      role: "user",
-      message
-    });
-
-
-
-    await Chat.create({
-      userId,
-      companyId,
-      role: "bot",
-      message: reply
-    });
-
-
-
-    res.json({ reply });
+    res.json({ reply: botReply });
 
   } catch (err) {
-
-    console.error(err);
-
-    res.status(500).json({
-      reply: "Server error"
-    });
-
+    console.error("Chat Error:", err);
+    res.status(500).json({ reply: "Jet is having trouble right now." });
   }
-
 });
 
-
-
-// ========================
-// Chat history
-// ========================
-
+// ===============================
+// LOAD CHAT HISTORY
+// ===============================
 app.get("/history", async (req, res) => {
-
   const { userId, companyId } = req.query;
 
-  const messages = await Chat.find({
-    userId,
-    companyId
-  }).sort({ timestamp: 1 });
+  if (!userId || !companyId)
+    return res.status(400).json([]);
 
+  try {
+    const messages = await Chat.find({ userId, companyId })
+      .sort({ timestamp: 1 });
 
+    res.json(messages.map(msg => ({
+      type: msg.role === "bot" ? "bot" : "user",
+      text: msg.message,
+      timestamp: msg.timestamp
+    })));
 
-  res.json(messages.map((m) => ({
-    type: m.role === "bot" ? "bot" : "user",
-    text: m.message
-  })));
-
+  } catch (err) {
+    console.error("History Error:", err);
+    res.status(500).json([]);
+  }
 });
 
-
-
-// ========================
-// Start server
-// ========================
-
+// ===============================
+// START SERVER
+// ===============================
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
