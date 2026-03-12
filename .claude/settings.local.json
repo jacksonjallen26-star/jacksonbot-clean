@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/Jackson/plumber-demo-clean/.claude/worktrees/vigilant-haslett -type f \\\\\\(-name *.js -o -name *.jsx -o -name *.ts -o -name *.tsx -o -name *.json -o -name *.py -o -name *.sql \\\\\\))"
+    ]
+  }
+}
