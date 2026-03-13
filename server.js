@@ -5,6 +5,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const OpenAI = require("openai");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
 require("dotenv").config();
 
 const app = express();
@@ -36,6 +38,8 @@ mongoose.connect(process.env.MONGODB_URI)
 const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   companyId: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password : { type: String, required: true },
 
   // Branding / Theme
   botName: { type: String, default: "Jet AI" },
@@ -76,32 +80,105 @@ const chatSchema = new mongoose.Schema({
 const Chat = mongoose.model("Chat", chatSchema);
 
 // ===============================
+// AUTH MIDDLEWARE
+// ===============================
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader)
+    return res.status(401).json({ error: "No token provided" });
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token)
+    return res.status(401).json({ error: "Invalid token format" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.companyId = decoded.companyId;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
+
+
+// ===============================
 // HEALTH CHECK
 // ===============================
 app.get("/", (req, res) => {
   res.send("🚀 Backend is running");
 });
 
+  
+
+
 // ===============================
-// CREATE COMPANY (Dashboard Use)
+// REGISTER COMPANY
 // ===============================
-app.post("/api/create-company", async (req, res) => {
+
+app.post("/api/register", async (req, res) => {
   try {
-    const { name, companyId } = req.body;
+    const { name, companyId, email, password } = req.body;
 
-    if (!name || !companyId)
-      return res.status(400).json({ error: "Name and companyId required" });
+    if (!name || !companyId || !email || !password)
+      return res.status(400).json({ error: "All fields required" });
 
-    const existing = await Company.findOne({ companyId });
+    const existing = await Company.findOne({ email });
     if (existing)
-      return res.status(400).json({ error: "Company already exists" });
+      return res.status(400).json({ error: "Email already registered" });
 
-    const newCompany = await Company.create({ name, companyId });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.json({ success: true, company: newCompany });
+    const company = await Company.create({
+      name,
+      companyId,
+      email,
+      password: hashedPassword
+    });
+
+    const token = jwt.sign(
+      { companyId: company.companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, companyId: company.companyId });
 
   } catch (err) {
-    console.error("Create Company Error:", err);
+    console.error("Register error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// LOGIN
+// ===============================
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password required" });
+
+    const company = await Company.findOne({ email });
+    if (!company)
+      return res.status(404).json({ error: "Company not registered" });
+
+    const passwordMatch = await bcrypt.compare(password, company.password);
+    if (!passwordMatch)
+      return res.status(401).json({ error: "Invalid password" });
+
+    const token = jwt.sign(
+      { companyId: company.companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, companyId: company.companyId });
+
+  } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -109,10 +186,10 @@ app.post("/api/create-company", async (req, res) => {
 // ===============================
 // UPDATE COMPANY SETTINGS
 // ===============================
-app.post("/api/update-settings", async (req, res) => {
+app.post("/api/update-settings", authenticateToken, async (req, res) => {
   try {
+    const companyId = req.companyId;
     const {
-      companyId,
       botName,
       logoUrl,
       primaryColor,
@@ -123,8 +200,7 @@ app.post("/api/update-settings", async (req, res) => {
       systemPrompt
     } = req.body;
 
-    if (!companyId)
-      return res.status(400).json({ error: "companyId required" });
+  
 
     const updatedCompany = await Company.findOneAndUpdate(
       { companyId },
@@ -238,7 +314,7 @@ app.post("/chat", async (req, res) => {
 // ===============================
 // LOAD CHAT HISTORY
 // ===============================
-app.get("/history", async (req, res) => {
+app.get("/history", authenticateToken, async (req, res) => {
   const { userId, companyId } = req.query;
 
   if (!userId || !companyId)
