@@ -1,8 +1,76 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
-function App() {
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// =============================
+// Protected Route
+// =============================
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) return <Navigate to="/login" />;
+  return children;
+}
+
+// =============================
+// Login Page
+// =============================
+function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("companyId", data.companyId);
+      navigate("/dashboard");
+
+    } catch (err) {
+      setError("Something went wrong");
+    }
+  };
+
+  return (
+    <div style={{ padding: 40, fontFamily: "Arial", maxWidth: 400 }}>
+      <h2>Login to your Dashboard</h2>
+      <label>Email</label>
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ display: "block", marginBottom: 10, width: "100%" }}
+      />
+      <label>Password</label>
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ display: "block", marginBottom: 10, width: "100%" }}
+      />
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <button onClick={handleLogin}>Login</button>
+    </div>
+  );
+}
+
+// =============================
+// Dashboard Page
+// =============================
+function DashboardPage() {
   const [companyId, setCompanyId] = useState("");
   const [botName, setBotName] = useState("Jet AI");
   const [logoUrl, setLogoUrl] = useState("");
@@ -16,11 +84,10 @@ function App() {
   const [status, setStatus] = useState("");
 
   // =============================
-  // Get companyId from URL
+  // Get companyId from localStorage
   // =============================
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("companyId");
+    const id = localStorage.getItem("companyId");
     if (id) setCompanyId(id);
   }, []);
 
@@ -54,7 +121,7 @@ function App() {
     }
 
     fetchSettings();
-  }, [companyId, BACKEND_URL]);
+  }, [companyId]);
 
   // =============================
   // Save Settings
@@ -65,9 +132,11 @@ function App() {
     try {
       const res = await fetch(`${BACKEND_URL}/api/update-settings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
-          companyId,
           botName,
           logoUrl,
           primaryColor,
@@ -89,81 +158,74 @@ function App() {
     }
   };
 
-  if (!companyId) {
-    return <div style={{ padding: 40 }}>No companyId in URL.</div>;
-  }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("companyId");
+    window.location.href = "/login";
+  };
 
   return (
     <div style={{ padding: 40, fontFamily: "Arial", maxWidth: 500 }}>
-      <h2>Dashboard for: {companyId}</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Dashboard for: {companyId}</h2>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
 
       <label>Bot Name</label>
-      <input
-        value={botName}
-        onChange={(e) => setBotName(e.target.value)}
-      />
+      <input value={botName} onChange={(e) => setBotName(e.target.value)} style={{ display: "block", marginBottom: 10, width: "100%" }} />
 
       <label>Logo URL</label>
-      <input
-        value={logoUrl}
-        onChange={(e) => setLogoUrl(e.target.value)}
-      />
+      <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} style={{ display: "block", marginBottom: 10, width: "100%" }} />
 
       <label>Primary Color</label>
-      <input
-        type="color"
-        value={primaryColor}
-        onChange={(e) => setPrimaryColor(e.target.value)}
-      />
+      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} style={{ display: "block", marginBottom: 10 }} />
 
       <label>Secondary Color</label>
-      <input
-        type="color"
-        value={secondaryColor}
-        onChange={(e) => setSecondaryColor(e.target.value)}
-      />
+      <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} style={{ display: "block", marginBottom: 10 }} />
 
       <label>Accent Color</label>
-      <input
-        type="color"
-        value={accentColor}
-        onChange={(e) => setAccentColor(e.target.value)}
-      />
+      <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} style={{ display: "block", marginBottom: 10 }} />
 
       <label>Text Color</label>
-      <input
-        type="color"
-        value={textColor}
-        onChange={(e) => setTextColor(e.target.value)}
-      />
+      <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} style={{ display: "block", marginBottom: 10 }} />
 
       <label>Bot Bubble Color</label>
-      <input
-        type="color"
-        value={botBubbleColor}
-        onChange={(e) => setBotBubbleColor(e.target.value)}
-      />
+      <input type="color" value={botBubbleColor} onChange={(e) => setBotBubbleColor(e.target.value)} style={{ display: "block", marginBottom: 10 }} />
 
       <label>Opening Message</label>
-      <textarea
-        value={openingMessage}
-        onChange={(e) => setOpeningMessage(e.target.value)}
-        rows={3}
-      />
+      <textarea value={openingMessage} onChange={(e) => setOpeningMessage(e.target.value)} rows={3} style={{ display: "block", marginBottom: 10, width: "100%" }} />
 
       <label>System Prompt</label>
-      <textarea
-        value={systemPrompt}
-        onChange={(e) => setSystemPrompt(e.target.value)}
-        rows={4}
-      />
+      <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={4} style={{ display: "block", marginBottom: 10, width: "100%" }} />
 
-      <br /><br />
+      <br />
 
       <button onClick={saveSettings}>Save Settings</button>
 
       <div style={{ marginTop: 20 }}>{status}</div>
     </div>
+  );
+}
+
+// =============================
+// App Router
+// =============================
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
