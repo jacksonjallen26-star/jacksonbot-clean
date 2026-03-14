@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "https://jacksonbot-clean.vercel.app",
-    "https://jacksonbot-dashboard.vercel.app/login",
+    "https://jacksonbot-dashboard.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:5500"
   ],
