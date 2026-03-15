@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken")
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { Pinecone } = require("@pinecone-database/pinecone");
-const pdfParse = require("pdf-parse");
+const PDFParser = require("pdf2json");
 const multer = require("multer");
 require("dotenv").config();
 
@@ -229,11 +229,21 @@ app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req,
       return res.status(400).json({ error: "No PDF uploaded" });
 
     // Step 1: Extract text from PDF
-    const pdfData = await pdfParse.default ? pdfParse.default(req.file.buffer) : pdfParse(req.file.buffer);
-    const text = pdfData.text;
+    const pdfParser = new PDFParser();
 
-    if (!text || text.trim().length === 0)
-      return res.status(400).json({ error: "Could not extract text from PDF" });
+    const text = await new Promise((resolve, reject) => {
+      pdfParser.on("pdfParser_dataReady", (pdfData) => {
+    const text = pdfData.Pages.map(page =>
+      page.Texts.map(t => decodeURIComponent(t.R.map(r => r.T).join(""))).join(" ")
+    ).join("\n");
+    resolve(text);
+  });
+  pdfParser.on("pdfParser_dataError", reject);
+  pdfParser.parseBuffer(req.file.buffer);
+});
+
+if (!text || text.trim().length === 0)
+  return res.status(400).json({ error: "Could not extract text from PDF" });
 
     // Step 2: Split text into chunks
     const chunkSize = 500;
