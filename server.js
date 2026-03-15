@@ -430,6 +430,10 @@ app.post("/chat", chatLimiter, async (req, res) => {
       .filter(match => match.score > 0.7)
       .map(match => match.metadata.text)
       .join("\n\n");
+      
+console.log("Search results count:", searchResults.matches.length);
+console.log("Relevant chunks after filter:", relevantChunks.length);
+console.log("Chunks preview:", relevantChunks.substring(0, 200));
 
     const previousMessages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 })
