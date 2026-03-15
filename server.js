@@ -282,10 +282,8 @@ console.log("First chunk:", chunks[0]);
 console.log("Number of vectors created:", vectors.length);
     // Step 4: Store in Pinecone
 console.log("Vectors sample:", JSON.stringify(vectors[0]).substring(0, 200));
-// Step 4: Store in Pinecone
-const namespace = index.namespace("__default__");
 console.log("Attempting upsert with", vectors.length, "vectors");
-await namespace.upsert(vectors);
+await index.upsert(vectors);
 
 res.json({ success: true, chunksStored: chunks.length });
   } catch (err) {
