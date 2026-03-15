@@ -281,6 +281,9 @@ console.log("First chunk:", chunks[0]);
     }
 console.log("Number of vectors created:", vectors.length);
     // Step 4: Store in Pinecone
+    // Step 4: Store in Pinecone
+console.log("Vectors sample:", JSON.stringify(vectors[0]).substring(0, 200));
+await index.upsert(vectors);
     await index.upsert(vectors);
 
     res.json({ success: true, chunksStored: chunks.length });
