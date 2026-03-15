@@ -279,7 +279,7 @@ console.log("First chunk:", chunks[0]);
         metadata: { companyId, text: chunks[i] }
       });
     }
-
+console.log("Number of vectors created:", vectors.length);
     // Step 4: Store in Pinecone
     await index.upsert(vectors);
 
