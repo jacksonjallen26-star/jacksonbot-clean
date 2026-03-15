@@ -248,7 +248,20 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
     if (!updatedCompany)
       return res.status(404).json({ error: "Company not found" });
 
-    res.json({ success: true, settings: updatedCompany });
+    res.json({ 
+      success: true, 
+      settings: {
+        botName: updatedCompany.botName,
+        logoUrl: updatedCompany.logoUrl,
+        primaryColor: updatedCompany.primaryColor,
+        secondaryColor: updatedCompany.secondaryColor,
+        accentColor: updatedCompany.accentColor,
+        textColor: updatedCompany.textColor,
+        botBubbleColor: updatedCompany.botBubbleColor,
+        systemPrompt: updatedCompany.systemPrompt,
+        openingMessage: updatedCompany.openingMessage
+     }
+});
 
   } catch (err) {
     console.error("Update Settings Error:", err);
