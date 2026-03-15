@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
 // =============================
 // Protected Route
 // =============================
@@ -82,6 +81,9 @@ function DashboardPage() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [openingMessage, setOpeningMessage] = useState("");
   const [status, setStatus] = useState("");
+  const [pdfFile, setPdfFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState("");
+
 
   // =============================
   // Get companyId from localStorage
@@ -122,6 +124,40 @@ function DashboardPage() {
 
     fetchSettings();
   }, [companyId]);
+
+  // =============================
+// Upload PDF
+// =============================
+    const uploadPdf = async () => {
+      if (!pdfFile) return;
+      setUploadStatus("Uploading...");
+
+  try {
+    const formData = new FormData();
+    formData.append("pdf", pdfFile);
+
+    const res = await fetch(`${BACKEND_URL}/api/upload-pdf`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setUploadStatus(`❌ ${data.error}`);
+      return;
+    }
+
+    setUploadStatus(`✅ Uploaded successfully! ${data.chunksStored} chunks stored.`);
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    setUploadStatus("❌ Upload failed.");
+  }
+};
 
   // =============================
   // Save Settings
@@ -197,6 +233,15 @@ function DashboardPage() {
 
       <label>System Prompt</label>
       <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={4} style={{ display: "block", marginBottom: 10, width: "100%" }} />
+      
+      <hr />
+      <h3>Knowledge Base</h3>
+      <label>Upload PDF</label>
+      <input type="file"accept="application/pdf"onChange={(e) => setPdfFile(e.target.files[0])} style={{ display: "block", marginBottom: 10 }}
+/>
+<button onClick={uploadPdf}>Upload PDF</button>
+<div style={{ marginTop: 10 }}>{uploadStatus}</div>
+<hr />
 
       <br />
 
