@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken")
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { Pinecone } = require("@pinecone-database/pinecone");
-const pdfParse = require("pdf-parse");
+const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 const multer = require("multer");
 require("dotenv").config();
 
