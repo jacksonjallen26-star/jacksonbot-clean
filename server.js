@@ -8,6 +8,7 @@ const OpenAI = require("openai");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 const rateLimit = require("express-rate-limit");
+const sanitizeHtml = require("sanitize-html");
 require("dotenv").config();
 
 const app = express();
@@ -220,26 +221,30 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
       accentColor,
       textColor,
       botBubbleColor,
-      systemPrompt
+      systemPrompt,
+      openingMessage
     } = req.body;
 
-  
+    const sanitizedBotName = sanitizeHtml(botName || "", { allowedTags: [], allowedAttributes: {} });
+    const sanitizedSystemPrompt = sanitizeHtml(systemPrompt || "", { allowedTags: [], allowedAttributes: {} });
+    const sanitizedOpeningMessage = sanitizeHtml(openingMessage || "", { allowedTags: [], allowedAttributes: {} });
+    const sanitizedLogoUrl = sanitizeHtml(logoUrl || "", { allowedTags: [], allowedAttributes: {} });
 
     const updatedCompany = await Company.findOneAndUpdate(
-      { companyId },
-      {
-        botName,
-        logoUrl,
-        primaryColor,
-        secondaryColor,
-        accentColor,
-        textColor,
-        botBubbleColor,
-        systemPrompt
+        { companyId },
+        {
+          botName: sanitizedBotName,
+          logoUrl: sanitizedLogoUrl,
+          primaryColor,
+          secondaryColor,
+          accentColor,
+          textColor,
+         botBubbleColor,
+         systemPrompt: sanitizedSystemPrompt,
+         openingMessage: sanitizedOpeningMessage
       },
       { new: true }
-    );
-
+);
     if (!updatedCompany)
       return res.status(404).json({ error: "Company not found" });
 
