@@ -260,7 +260,8 @@ if (!text || text.trim().length === 0)
       const chunk = text.slice(i, i + chunkSize).trim();
       if (chunk.length > 0) chunks.push(chunk);
     }
-
+console.log("Number of chunks:", chunks.length);
+console.log("First chunk:", chunks[0]);
     // Step 3: Get embeddings from OpenAI
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const index = pinecone.index("jetai-knowledge");
