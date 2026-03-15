@@ -248,6 +248,8 @@ app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req,
   pdfParser.parseBuffer(req.file.buffer);
 });
 
+console.log("Extracted text length:", text.length);
+console.log("First 200 chars:", text.substring(0, 200));
 if (!text || text.trim().length === 0)
   return res.status(400).json({ error: "Could not extract text from PDF" });
 
