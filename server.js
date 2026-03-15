@@ -16,7 +16,7 @@ const app = express();
 // ===============================
 // MIDDLEWARE
 // ===============================
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 
 app.use(cors({
   origin: [
