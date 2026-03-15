@@ -9,10 +9,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
+const { Pinecone } = require("@pinecone-database/pinecone");
+const pdfParse = require("pdf-parse");
+const multer = require("multer");
 require("dotenv").config();
 
 const app = express();
 
+// ===============================
+// PINECONE + UPLOAD CONFIG
+// ===============================
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY
+});
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ===============================
 // MIDDLEWARE
@@ -208,6 +219,60 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ===============================
+// UPLOAD PDF
+// ===============================
+app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req, res) => {
+  try {
+    const companyId = req.companyId;
+
+    if (!req.file)
+      return res.status(400).json({ error: "No PDF uploaded" });
+
+    // Step 1: Extract text from PDF
+    const pdfData = await pdfParse(req.file.buffer);
+    const text = pdfData.text;
+
+    if (!text || text.trim().length === 0)
+      return res.status(400).json({ error: "Could not extract text from PDF" });
+
+    // Step 2: Split text into chunks
+    const chunkSize = 500;
+    const chunks = [];
+    for (let i = 0; i < text.length; i += chunkSize) {
+      const chunk = text.slice(i, i + chunkSize).trim();
+      if (chunk.length > 0) chunks.push(chunk);
+    }
+
+    // Step 3: Get embeddings from OpenAI
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const index = pinecone.index("jetai-knowledge");
+
+    const vectors = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const embedding = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: chunks[i]
+      });
+
+      vectors.push({
+        id: `${companyId}-chunk-${i}`,
+        values: embedding.data[0].embedding,
+        metadata: { companyId, text: chunks[i] }
+      });
+    }
+
+    // Step 4: Store in Pinecone
+    await index.upsert(vectors);
+
+    res.json({ success: true, chunksStored: chunks.length });
+
+  } catch (err) {
+    console.error("PDF Upload Error:", err);
+    res.status(500).json({ error: "Failed to process PDF" });
+  }
+});
+
+// ===============================
 // UPDATE COMPANY SETTINGS
 // ===============================
 app.post("/api/update-settings", authenticateToken, async (req, res) => {
@@ -325,6 +390,27 @@ app.post("/chat", chatLimiter, async (req, res) => {
     if (!company.active)
       return res.status(403).json({ reply: "Subscription inactive." });
 
+    // Step 1: Search Pinecone for relevant chunks
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const index = pinecone.index("jetai-knowledge");
+
+    const questionEmbedding = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: message
+    });
+
+    const searchResults = await index.query({
+      vector: questionEmbedding.data[0].embedding,
+      topK: 5,
+      filter: { companyId },
+      includeMetadata: true
+    });
+
+    const relevantChunks = searchResults.matches
+      .filter(match => match.score > 0.7)
+      .map(match => match.metadata.text)
+      .join("\n\n");
+
     const previousMessages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 })
       .limit(10);
@@ -334,12 +420,16 @@ app.post("/chat", chatLimiter, async (req, res) => {
       content: msg.message
     }));
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: company.systemPrompt },
+        { 
+      role: "system", 
+      content: relevantChunks 
+        ? `${company.systemPrompt}\n\nRelevant information:\n${relevantChunks}` 
+        : company.systemPrompt 
+    },
         ...history,
         { role: "user", content: message }
       ]
