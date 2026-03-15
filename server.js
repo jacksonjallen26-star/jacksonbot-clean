@@ -234,8 +234,14 @@ app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req,
     const text = await new Promise((resolve, reject) => {
       pdfParser.on("pdfParser_dataReady", (pdfData) => {
     const text = pdfData.Pages.map(page =>
-      page.Texts.map(t => decodeURIComponent(t.R.map(r => r.T).join(""))).join(" ")
-    ).join("\n");
+  page.Texts.map(t => {
+    try {
+      return decodeURIComponent(t.R.map(r => r.T).join(""));
+    } catch {
+      return t.R.map(r => r.T).join("");
+    }
+  }).join(" ")
+).join("\n");
     resolve(text);
   });
   pdfParser.on("pdfParser_dataError", reject);
