@@ -130,12 +130,26 @@ app.post("/api/register", async (req, res) => {
   try {
     const { name, companyId, email, password } = req.body;
 
-    if (!name || !companyId || !email || !password)
+     if (!name || !companyId || !email || !password)
       return res.status(400).json({ error: "All fields required" });
+
+     if (password.length < 8)
+  return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+     if (!emailValid)
+  return res.status(400).json({ error: "Invalid email format" });
+
+     if (companyId.includes(" "))
+  return res.status(400).json({ error: "Company ID cannot contain spaces" });
 
     const existing = await Company.findOne({ email });
     if (existing)
       return res.status(400).json({ error: "Email already registered" });
+
+    const existingCompanyId = await Company.findOne({ companyId });
+    if (existingCompanyId)
+  return res.status(400).json({ error: "Company ID already taken" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -277,6 +291,12 @@ app.post("/chat", chatLimiter, async (req, res) => {
 
   if (!message || !userId || !companyId)
     return res.status(400).json({ reply: "Missing required fields." });
+
+  if (message.length > 1000)
+  return res.status(400).json({ reply: "Message too long. Please keep it under 1000 characters." });
+
+  if (!message.trim())
+  return res.status(400).json({ reply: "Message cannot be empty." });
 
   try {
     const company = await Company.findOne({ companyId });
