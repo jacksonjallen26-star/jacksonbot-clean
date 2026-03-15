@@ -285,7 +285,7 @@ console.log("Number of vectors created:", vectors.length);
 console.log("Vectors sample:", JSON.stringify(vectors[0]).substring(0, 200));
 await index.upsert(vectors);
     await index.upsert(vectors);
-
+ 
     res.json({ success: true, chunksStored: chunks.length });
 
   } catch (err) {
