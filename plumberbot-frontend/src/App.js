@@ -10,10 +10,19 @@ function App() {
   const chatEndRef = useRef(null);
 
   // =========================
+  // Sanitize Colors
+  // =========================
+  const sanitizeColor = (color, fallback) => {
+   const hex = /^#[0-9A-Fa-f]{6}$/.test(color);
+   return hex ? color : fallback;
+};
+
+  // =========================
   // Detect companyId
   // =========================
   const params = new URLSearchParams(window.location.search);
   const companyId = params.get("companyId") || "default";
+
 
   // =========================
   // Detect widget mode
@@ -49,12 +58,12 @@ function App() {
         const data = await res.json();
 
         // Apply CSS variables dynamically
-        document.documentElement.style.setProperty("--primary-color", data.primaryColor);
-        document.documentElement.style.setProperty("--secondary-color", data.secondaryColor);
-        document.documentElement.style.setProperty("--accent-color", data.accentColor);
-        document.documentElement.style.setProperty("--text-color", data.textColor);
-        document.documentElement.style.setProperty("--bot-bubble-color", data.botBubbleColor);
-        document.documentElement.style.setProperty("--glow-color", data.secondaryColor);
+        document.documentElement.style.setProperty("--primary-color", sanitizeColor(data.primaryColor, "#4f46e5"));
+        document.documentElement.style.setProperty("--secondary-color", sanitizeColor(data.secondaryColor, "#6366f1"));
+        document.documentElement.style.setProperty("--accent-color", sanitizeColor(data.accentColor, "#4338ca"));
+        document.documentElement.style.setProperty("--text-color", sanitizeColor(data.textColor, "#ffffff"));
+        document.documentElement.style.setProperty("--bot-bubble-color", sanitizeColor(data.botBubbleColor, "#2a2a2a"));
+        document.documentElement.style.setProperty("--glow-color", sanitizeColor(data.secondaryColor, "#6366f1"));
 
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
