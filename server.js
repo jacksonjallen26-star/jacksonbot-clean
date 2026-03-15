@@ -427,10 +427,10 @@ app.post("/chat", chatLimiter, async (req, res) => {
     });
 
     const relevantChunks = searchResults.matches
-      .filter(match => match.score > 0.7)
+      .filter(match => match.score > 0.3)
       .map(match => match.metadata.text)
       .join("\n\n");
-      
+
 console.log("Search results count:", searchResults.matches.length);
 console.log("Relevant chunks after filter:", relevantChunks.length);
 console.log("Chunks preview:", relevantChunks.substring(0, 200));
