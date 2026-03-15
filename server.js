@@ -248,8 +248,7 @@ app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req,
   pdfParser.parseBuffer(req.file.buffer);
 });
 
-console.log("Extracted text length:", text.length);
-console.log("First 200 chars:", text.substring(0, 200));
+
 if (!text || text.trim().length === 0)
   return res.status(400).json({ error: "Could not extract text from PDF" });
 
@@ -260,8 +259,7 @@ if (!text || text.trim().length === 0)
       const chunk = text.slice(i, i + chunkSize).trim();
       if (chunk.length > 0) chunks.push(chunk);
     }
-console.log("Number of chunks:", chunks.length);
-console.log("First chunk:", chunks[0]);
+
     // Step 3: Get embeddings from OpenAI
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const index = pinecone.index("jetai-knowledge");
@@ -279,10 +277,9 @@ console.log("First chunk:", chunks[0]);
         metadata: { companyId, text: chunks[i] }
       });
     }
-console.log("Number of vectors created:", vectors.length);
+
     // Step 4: Store in Pinecone
-console.log("Vectors sample:", JSON.stringify(vectors[0]).substring(0, 200));
-console.log("Attempting upsert with", vectors.length, "vectors");
+
 await index.upsert(vectors);
 
 res.json({ success: true, chunksStored: chunks.length });
@@ -431,9 +428,7 @@ app.post("/chat", chatLimiter, async (req, res) => {
       .map(match => match.metadata.text)
       .join("\n\n");
 
-console.log("Search results count:", searchResults.matches.length);
-console.log("Relevant chunks after filter:", relevantChunks.length);
-console.log("Chunks preview:", relevantChunks.substring(0, 200));
+
 
     const previousMessages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 })
