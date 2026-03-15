@@ -7,9 +7,11 @@ const mongoose = require("mongoose");
 const OpenAI = require("openai");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
+
 
 // ===============================
 // MIDDLEWARE
@@ -25,6 +27,12 @@ app.use(cors({
   ],
   methods: ["GET", "POST"]
 }));
+
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { reply: "Too many messages. Please wait a few minutes before trying again." }
+});
 
 // ===============================
 // MONGODB CONNECTION
@@ -264,7 +272,7 @@ app.get("/api/get-settings", async (req, res) => {
 // ===============================
 // CHAT ENDPOINT
 // ===============================
-app.post("/chat", async (req, res) => {
+app.post("/chat", chatLimiter, async (req, res) => {
   const { message, userId, companyId } = req.body;
 
   if (!message || !userId || !companyId)
