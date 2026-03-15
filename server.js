@@ -447,8 +447,8 @@ app.post("/chat", chatLimiter, async (req, res) => {
         { 
       role: "system", 
       content: relevantChunks 
-        ? `${company.systemPrompt}\n\nRelevant information:\n${relevantChunks}` 
-        : company.systemPrompt 
+  ? `${company.systemPrompt}\n\nAnswer the question using ONLY the following information. Do not add anything not contained in this text:\n${relevantChunks}` 
+  : company.systemPrompt
     },
         ...history,
         { role: "user", content: message }
