@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken")
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { Pinecone } = require("@pinecone-database/pinecone");
-const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+const pdfParse = require("pdf-parse");
 const multer = require("multer");
 require("dotenv").config();
 
@@ -229,7 +229,7 @@ app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req,
       return res.status(400).json({ error: "No PDF uploaded" });
 
     // Step 1: Extract text from PDF
-    const pdfData = await pdfParse(req.file.buffer);
+    const pdfData = await pdfParse.default ? pdfParse.default(req.file.buffer) : pdfParse(req.file.buffer);
     const text = pdfData.text;
 
     if (!text || text.trim().length === 0)
