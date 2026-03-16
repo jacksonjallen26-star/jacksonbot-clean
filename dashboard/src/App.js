@@ -83,6 +83,8 @@ function DashboardPage() {
   const [status, setStatus] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [conversations, setConversations] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
 
 
   // =============================
@@ -92,6 +94,8 @@ function DashboardPage() {
     const id = localStorage.getItem("companyId");
     if (id) setCompanyId(id);
   }, []);
+
+  
 
   // =============================
   // Load Company Settings
@@ -158,6 +162,29 @@ function DashboardPage() {
     setUploadStatus("❌ Upload failed.");
   }
 };
+
+  // =============================
+  // Load Conversations
+  // =============================
+  const loadConversations = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/conversations`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = await res.json();
+      if (data.success) setConversations(data.conversations);
+
+    } catch (err) {
+      console.error("Failed to load conversations:", err);
+    }
+  }; 
+
+  useEffect(() => {
+      loadConversations();
+    }, []);
 
   // =============================
   // Save Settings
@@ -248,6 +275,67 @@ function DashboardPage() {
       <button onClick={saveSettings}>Save Settings</button>
 
       <div style={{ marginTop: 20 }}>{status}</div>
+
+      <hr />
+<h3>Conversations</h3>
+<button onClick={loadConversations} style={{ marginBottom: 10 }}>Refresh</button>
+
+<div style={{ display: "flex", gap: 20, marginTop: 10 }}>
+  
+  {/* User List */}
+  <div style={{ width: 200, borderRight: "1px solid #ccc", paddingRight: 10 }}>
+    <h4>Users</h4>
+    {Object.keys(conversations).length === 0 && <p style={{ fontSize: 12, color: "#999" }}>No conversations yet</p>}
+    {Object.keys(conversations).map(userId => (
+      <div
+        key={userId}
+        onClick={() => setSelectedUser(userId)}
+        style={{
+          padding: 8,
+          marginBottom: 5,
+          cursor: "pointer",
+          background: selectedUser === userId ? "#4f46e5" : "#f0f0f0",
+          color: selectedUser === userId ? "#fff" : "#000",
+          borderRadius: 5,
+          fontSize: 12
+        }}
+      >
+        {userId.slice(0, 8)}...
+      </div>
+    ))}
+  </div>
+
+  {/* Conversation View */}
+  <div style={{ flex: 1 }}>
+    <h4>Messages</h4>
+    {!selectedUser && <p style={{ color: "#999" }}>Select a user to view conversation</p>}
+    {selectedUser && conversations[selectedUser].map((msg, i) => (
+      <div
+        key={i}
+        style={{
+          marginBottom: 8,
+          textAlign: msg.role === "user" ? "right" : "left"
+        }}
+      >
+        <div style={{
+          display: "inline-block",
+          padding: 8,
+          borderRadius: 5,
+          background: msg.role === "user" ? "#4f46e5" : "#f0f0f0",
+          color: msg.role === "user" ? "#fff" : "#000",
+          maxWidth: "80%",
+          fontSize: 13
+        }}>
+          {msg.message}
+        </div>
+        <div style={{ fontSize: 10, color: "#999", marginTop: 2 }}>
+          {new Date(msg.timestamp).toLocaleString()}
+        </div>
+      </div>
+    ))}
+  </div>
+
+</div>
     </div>
   );
 }

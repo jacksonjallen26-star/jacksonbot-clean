@@ -470,7 +470,7 @@ app.post("/chat", chatLimiter, async (req, res) => {
 // ===============================
 // LOAD CHAT HISTORY
 // ===============================
-app.get("/history", authenticateToken, async (req, res) => {
+app.get("/history", async (req, res) => {
   const { userId, companyId } = req.query;
 
   if (!userId || !companyId)
@@ -489,6 +489,37 @@ app.get("/history", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("History Error:", err);
     res.status(500).json([]);
+  }
+});
+
+// ===============================
+// GET COMPANY CONVERSATIONS
+// ===============================
+app.get("/api/conversations", authenticateToken, async (req, res) => {
+  try {
+    const companyId = req.companyId;
+
+    const messages = await Chat.find({ companyId })
+      .sort({ timestamp: 1 });
+
+    // Group messages by userId
+    const conversations = {};
+    messages.forEach(msg => {
+      if (!conversations[msg.userId]) {
+        conversations[msg.userId] = [];
+      }
+      conversations[msg.userId].push({
+        role: msg.role,
+        message: msg.message,
+        timestamp: msg.timestamp
+      });
+    });
+
+    res.json({ success: true, conversations });
+
+  } catch (err) {
+    console.error("Conversations Error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
