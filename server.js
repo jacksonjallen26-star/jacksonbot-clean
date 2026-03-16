@@ -74,6 +74,8 @@ const companySchema = new mongoose.Schema({
   accentColor: { type: String, default: "#4338ca" },
   textColor: { type: String, default: "#ffffff" },
   botBubbleColor: { type: String, default: "#2a2a2a" },
+  bubbleLogoUrl: { type: String, default: "" },
+  bubbleColor: { type: String, default: "#7c3aed" },
 
   // AI Personality
   systemPrompt: {
@@ -307,13 +309,16 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
       textColor,
       botBubbleColor,
       systemPrompt,
-      openingMessage
+      openingMessage,
+      bubbleLogoUrl,
+      bubbleColor
     } = req.body;
 
     const sanitizedBotName = sanitizeHtml(botName || "", { allowedTags: [], allowedAttributes: {} });
     const sanitizedSystemPrompt = sanitizeHtml(systemPrompt || "", { allowedTags: [], allowedAttributes: {} });
     const sanitizedOpeningMessage = sanitizeHtml(openingMessage || "", { allowedTags: [], allowedAttributes: {} });
     const sanitizedLogoUrl = sanitizeHtml(logoUrl || "", { allowedTags: [], allowedAttributes: {} });
+    const sanitizedBubbleLogoUrl = sanitizeHtml(bubbleLogoUrl || "", { allowedTags: [], allowedAttributes: {} });
 
     const updatedCompany = await Company.findOneAndUpdate(
         { companyId },
@@ -326,7 +331,9 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
           textColor,
          botBubbleColor,
          systemPrompt: sanitizedSystemPrompt,
-         openingMessage: sanitizedOpeningMessage
+         openingMessage: sanitizedOpeningMessage,
+         bubbleLogoUrl: sanitizedBubbleLogoUrl,
+         bubbleColor: bubbleColor || "#7c3aed",
       },
       { new: true }
 );
@@ -344,7 +351,9 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
         textColor: updatedCompany.textColor,
         botBubbleColor: updatedCompany.botBubbleColor,
         systemPrompt: updatedCompany.systemPrompt,
-        openingMessage: updatedCompany.openingMessage
+        openingMessage: updatedCompany.openingMessage,
+        bubbleLogoUrl: updatedCompany.bubbleLogoUrl,
+        bubbleColor: updatedCompany.bubbleColor
      }
 });
 
@@ -377,7 +386,9 @@ app.get("/api/get-settings", async (req, res) => {
       accentColor: company.accentColor,
       textColor: company.textColor,
       botBubbleColor: company.botBubbleColor,
-      systemPrompt: company.systemPrompt
+      systemPrompt: company.systemPromp,
+      bubbleLogoUrl: company.bubbleLogoUrl,
+      bubbleColor: company.bubbleColor
     });
 
   } catch (err) {
