@@ -141,6 +141,8 @@ function DashboardPage() {
   const [conversations, setConversations] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [totalMessages, setTotalMessages] = useState(0);
+  const [bubbleLogoUrl, setBubbleLogoUrl] = useState("");
+  const [bubbleColor, setBubbleColor] = useState("#7c3aed");
 
   // =============================
   // Get companyId from localStorage
@@ -172,6 +174,8 @@ function DashboardPage() {
         setBotBubbleColor(data.botBubbleColor || "#1a1a28");
         setSystemPrompt(data.systemPrompt || "");
         setOpeningMessage(data.openingMessage || "");
+        setBubbleLogoUrl(data.bubbleLogoUrl || "");
+        setBubbleColor(data.bubbleColor || "#7c3aed");
       } catch (err) {
         console.error("Error loading settings:", err);
       }
@@ -242,7 +246,8 @@ function DashboardPage() {
         },
         body: JSON.stringify({
           botName, logoUrl, primaryColor, secondaryColor,
-          accentColor, textColor, botBubbleColor, systemPrompt, openingMessage
+          accentColor, textColor, botBubbleColor, systemPrompt, openingMessage, bubbleLogoUrl,
+          bubbleColor,
         })
       });
       if (!res.ok) throw new Error("Save failed");
@@ -394,6 +399,43 @@ function DashboardPage() {
           <button className="btn btn-primary" onClick={saveSettings}>Save Changes</button>
         </div>
       </div>
+      <div className="card">
+  <div className="card-header">
+    <div className="card-title"><div className="card-dot" style={{ background: "#ec4899" }}></div>Chat Bubble</div>
+  </div>
+  <div className="form-row">
+    <div className="form-group">
+      <label>Bubble Color</label>
+      <input type="color" value={bubbleColor} onChange={(e) => setBubbleColor(e.target.value)} />
+    </div>
+    <div className="form-group">
+      <label>Custom Logo URL (optional)</label>
+      <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://... (leave empty to use Askra logo)" />
+    </div>
+  </div>
+  <div style={{ marginTop: 12 }}>
+    <label style={{ marginBottom: 8, display: "block" }}>Preview</label>
+    <div style={{
+      width: 56,
+      height: 56,
+      borderRadius: "50%",
+      background: bubbleLogoUrl ? "transparent" : bubbleColor,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      border: "2px solid #1e1e2e"
+    }}>
+      {bubbleLogoUrl ? (
+        <img src={bubbleLogoUrl} alt="bubble" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+      )}
+    </div>
+  </div>
+</div>
     </>
   );
 
