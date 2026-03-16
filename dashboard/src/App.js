@@ -481,7 +481,7 @@ function DashboardPage() {
     <div className="layout">
       <div className="sidebar">
         <div className="logo">
-          <img src="/logo.png" alt="Askra" style={{ width: 32, height: 32, borderRadius: 8 }} />
+          <img src="/logo.png" alt="Askra" style={{ width: 15, height: 15, borderRadius: 8 }} />
           <span className="logo-text">Askra</span>
           <span className="logo-badge">BETA</span>
         </div>

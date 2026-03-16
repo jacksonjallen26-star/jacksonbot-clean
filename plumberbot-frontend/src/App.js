@@ -150,7 +150,7 @@ function App() {
         ...prev,
         {
           type: "bot",
-          text: "Jet is having trouble right now.",
+          text: "Askra is having trouble right now.",
           timestamp: new Date()
         }
       ]);

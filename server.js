@@ -65,8 +65,8 @@ const companySchema = new mongoose.Schema({
   password : { type: String, required: true },
 
   // Branding / Theme
-  botName: { type: String, default: "Jet AI" },
-  logoUrl: { type: String, default: "" },
+  botName: { type: String, default: "Askra" },
+  logoUrl: { type: String, default: "logo.png" },
 
   primaryColor: { type: String, default: "#4f46e5" },
   secondaryColor: { type: String, default: "#6366f1" },
@@ -77,7 +77,7 @@ const companySchema = new mongoose.Schema({
   // AI Personality
   systemPrompt: {
     type: String,
-    default: "You are Jet, a helpful and friendly AI assistant."
+    default: "You are Askra, a helpful and friendly AI assistant."
   },
 
   // SaaS Controls
@@ -465,7 +465,7 @@ app.post("/chat", chatLimiter, async (req, res) => {
 
   } catch (err) {
     console.error("Chat Error:", err);
-    res.status(500).json({ reply: "Jet is having trouble right now." });
+    res.status(500).json({ reply: "Askra is having trouble right now." });
   }
 });
 
