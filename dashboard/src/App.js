@@ -68,7 +68,7 @@ function LoginPage() {
       }}>
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 4 }}>
-            Jet AI
+            Askra Dashboard
             <span style={{
               fontSize: 10,
               background: "#7c3aed22",
@@ -163,7 +163,7 @@ function DashboardPage() {
         );
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
-        setBotName(data.botName || "Jet AI");
+        setBotName(data.botName || "Askra");
         setLogoUrl(data.logoUrl || "");
         setPrimaryColor(data.primaryColor || "#7c3aed");
         setSecondaryColor(data.secondaryColor || "#4f46e5");
@@ -481,7 +481,8 @@ function DashboardPage() {
     <div className="layout">
       <div className="sidebar">
         <div className="logo">
-          <span className="logo-text">Jet AI</span>
+          <img src="/logo.png" alt="Askra" style={{ width: 32, height: 32, borderRadius: 8 }} />
+          <span className="logo-text">Askra</span>
           <span className="logo-badge">BETA</span>
         </div>
 
