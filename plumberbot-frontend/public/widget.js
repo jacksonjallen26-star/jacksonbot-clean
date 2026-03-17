@@ -41,13 +41,7 @@
     border-radius: 50%; 
     display: block; }
 
-    #askra-bubble img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
+  
     #askra-bubble svg {
       width: 24px;
       height: 24px;
