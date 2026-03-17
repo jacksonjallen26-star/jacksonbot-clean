@@ -34,9 +34,12 @@
       overflow: hidden;
     }
 
-    #askra-bubble:hover {
-      transform: scale(1.08);
-    }
+    #askra-bubble img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit:cover; 
+    border-radius: 50%; 
+    display: block; }
 
     #askra-bubble img {
       width: 100%;
@@ -172,6 +175,7 @@
         .then(function (res) { return res.json(); })
         .then(function (data) {
           if (data.bubbleLogoUrl) {
+            bubble.style.background = "transparent";
             var img = document.createElement("img");
             img.src = data.bubbleLogoUrl;
             img.alt = "Chat";
