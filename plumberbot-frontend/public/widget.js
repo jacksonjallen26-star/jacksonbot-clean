@@ -35,8 +35,8 @@
     }
 
     #askra-bubble img { 
-    width: 100%; 
-    height: 100%; 
+    width: 130%; 
+    height: 130%; 
     object-fit:cover; 
     border-radius: 50%; 
     display: block; }
