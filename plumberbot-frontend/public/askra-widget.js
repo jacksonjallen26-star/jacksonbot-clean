@@ -1,5 +1,3 @@
-// Askra Widget v2
-
 (function () {
   var config = window.AskraConfig || {};
   var companyId = config.companyId;
