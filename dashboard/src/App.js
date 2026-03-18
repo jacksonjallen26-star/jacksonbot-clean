@@ -21,6 +21,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  
 
   const handleLogin = async () => {
     try {
@@ -143,6 +144,7 @@ function DashboardPage() {
   const [totalMessages, setTotalMessages] = useState(0);
   const [bubbleLogoUrl, setBubbleLogoUrl] = useState("");
   const [bubbleColor, setBubbleColor] = useState("#7c3aed");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // =============================
   // Get companyId from localStorage
@@ -151,6 +153,15 @@ function DashboardPage() {
     const id = localStorage.getItem("companyId");
     if (id) setCompanyId(id);
   }, []);
+
+  //====================
+  //user role check
+  //====================
+
+  useEffect(() => {
+  const role = localStorage.getItem("role");
+  if (role === "admin") setIsAdmin(true);
+}, []);
 
   // =============================
   // Load Company Settings

@@ -222,7 +222,7 @@ app.post("/api/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ success: true, token, companyId: company.companyId });
+    res.json({ success: true, token, companyId: company.companyId, role: company.role });
 
   } catch (err) {
     console.error("Login error:", err);
