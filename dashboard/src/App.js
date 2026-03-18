@@ -40,6 +40,7 @@ function LoginPage() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("companyId", data.companyId);
+      localStorage.setItem("role", data.role);
       navigate("/dashboard");
 
     } catch (err) {
@@ -428,6 +429,7 @@ const renderAdmin = () => (
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("companyId");
+    localStorage.removeItem("role");
     window.location.href = "/login";
   };
 
