@@ -169,7 +169,7 @@ useEffect(() => {
   if (activePage === "admin" && isAdmin) {
     loadAllCompanies();
   }
-}, [activePage]);
+}, [activePage, isAdmin]);
 
   // =============================
   // Load Company Settings
