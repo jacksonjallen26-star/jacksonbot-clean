@@ -86,6 +86,8 @@ const companySchema = new mongoose.Schema({
   // SaaS Controls
   active: { type: Boolean, default: true },
   plan: { type: String, default: "starter" },
+  role: { type: String, default: "user" },
+
 
   createdAt: { type: Date, default: Date.now }
 });
@@ -122,13 +124,18 @@ const authenticateToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.companyId = decoded.companyId;
+    req.userRole = decoded.role;
     next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 };
 
-
+    const requireAdmin = (req, res, next) => {
+    if (req.userRole !== "admin")
+    return res.status(403).json({ error: "Admin access required" });
+    next();
+};
 // ===============================
 // HEALTH CHECK
 // ===============================
@@ -178,7 +185,7 @@ app.post("/api/register", async (req, res) => {
     });
 
     const token = jwt.sign(
-      { companyId: company.companyId },
+      { companyId: company.companyId , role: company.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -210,7 +217,7 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid password" });
 
     const token = jwt.sign(
-      { companyId: company.companyId },
+      { companyId: company.companyId, role: company.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -533,6 +540,62 @@ app.get("/api/conversations", authenticateToken, async (req, res) => {
 
   } catch (err) {
     console.error("Conversations Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// ADMIN — GET ALL COMPANIES
+// ===============================
+app.get("/api/admin/companies", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const companies = await Company.find({})
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    const companiesWithStats = await Promise.all(
+      companies.map(async (company) => {
+        const messageCount = await Chat.countDocuments({ companyId: company.companyId });
+        const conversationCount = await Chat.distinct("userId", { companyId: company.companyId });
+        return {
+          ...company.toObject(),
+          messageCount,
+          conversationCount: conversationCount.length
+        };
+      })
+    );
+
+    res.json({ success: true, companies: companiesWithStats });
+
+  } catch (err) {
+    console.error("Admin companies error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// ADMIN — UPDATE COMPANY
+// ===============================
+app.post("/api/admin/update-company", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { targetCompanyId, active, plan } = req.body;
+
+    if (!targetCompanyId)
+      return res.status(400).json({ error: "targetCompanyId required" });
+
+    const updated = await Company.findOneAndUpdate(
+      { companyId: targetCompanyId },
+      { active, plan },
+      { new: true }
+    ).select("-password");
+
+    if (!updated)
+      return res.status(404).json({ error: "Company not found" });
+
+    res.json({ success: true, company: updated });
+
+  } catch (err) {
+    console.error("Admin update error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
