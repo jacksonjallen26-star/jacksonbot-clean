@@ -145,6 +145,8 @@ function DashboardPage() {
   const [bubbleLogoUrl, setBubbleLogoUrl] = useState("");
   const [bubbleColor, setBubbleColor] = useState("#7c3aed");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [adminStatus, setAdminStatus] = useState("");
 
   // =============================
   // Get companyId from localStorage
@@ -162,6 +164,12 @@ function DashboardPage() {
   const role = localStorage.getItem("role");
   if (role === "admin") setIsAdmin(true);
 }, []);
+
+useEffect(() => {
+  if (activePage === "admin" && isAdmin) {
+    loadAllCompanies();
+  }
+}, [activePage]);
 
   // =============================
   // Load Company Settings
@@ -269,6 +277,153 @@ function DashboardPage() {
       setStatus("❌ Failed to save.");
     }
   };
+
+
+  // =============================
+// Admin Page
+// =============================
+
+
+const loadAllCompanies = async () => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/admin/companies`, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    const data = await res.json();
+    if (data.success) setCompanies(data.companies);
+  } catch (err) {
+    console.error("Failed to load companies:", err);
+  }
+};
+
+const updateCompany = async (targetCompanyId, updates) => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/admin/update-company`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ targetCompanyId, ...updates })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setAdminStatus("✅ Updated successfully");
+      loadAllCompanies();
+      setTimeout(() => setAdminStatus(""), 3000);
+    }
+  } catch (err) {
+    setAdminStatus("❌ Update failed");
+  }
+};
+
+const renderAdmin = () => (
+  <>
+    <div className="page-header">
+      <div className="page-title">Admin</div>
+      <div className="page-subtitle">Manage all companies on Askra</div>
+    </div>
+
+    <div className="stats-row">
+      <div className="stat-card">
+        <div className="stat-label">Total Companies</div>
+        <div className="stat-value">{companies.length}</div>
+        <div className="stat-sub">All time</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-label">Active</div>
+        <div className="stat-value">{companies.filter(c => c.active).length}</div>
+        <div className="stat-sub">Currently active</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-label">Total Messages</div>
+        <div className="stat-value">{companies.reduce((sum, c) => sum + c.messageCount, 0)}</div>
+        <div className="stat-sub">Across all bots</div>
+      </div>
+    </div>
+
+    <div className="card">
+      <div className="card-header">
+        <div className="card-title"><div className="card-dot" style={{ background: "#f59e0b" }}></div>All Companies</div>
+        <button className="btn btn-ghost" style={{ fontSize: 12, padding: "5px 12px" }} onClick={loadAllCompanies}>Refresh</button>
+      </div>
+
+      {adminStatus && <div className={adminStatus.includes("✅") ? "status-text" : "error-text"} style={{ marginBottom: 12 }}>{adminStatus}</div>}
+
+      {companies.length === 0 ? (
+        <div className="empty-state">No companies yet</div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #1e1e2e" }}>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>Company</th>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>ID</th>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>Plan</th>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>Messages</th>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>Status</th>
+                <th style={{ padding: "8px 12px", textAlign: "left", color: "#555577", fontWeight: 500 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companies.map(company => (
+                <tr key={company.companyId} style={{ borderBottom: "1px solid #1e1e2e" }}>
+                  <td style={{ padding: "10px 12px", color: "#c4c4d4" }}>
+                    <div>{company.name}</div>
+                    <div style={{ fontSize: 11, color: "#444466" }}>{company.email}</div>
+                  </td>
+                  <td style={{ padding: "10px 12px", color: "#888899", fontFamily: "monospace", fontSize: 11 }}>{company.companyId}</td>
+                  <td style={{ padding: "10px 12px" }}>
+                    <select
+                      value={company.plan}
+                      onChange={(e) => updateCompany(company.companyId, { active: company.active, plan: e.target.value })}
+                      style={{
+                        background: "#0a0a0f",
+                        border: "1px solid #1e1e2e",
+                        borderRadius: 4,
+                        color: "#e2e2e8",
+                        padding: "3px 6px",
+                        fontSize: 12,
+                        fontFamily: "DM Sans, sans-serif"
+                      }}
+                    >
+                      <option value="free">Free</option>
+                      <option value="starter">Starter</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </td>
+                  <td style={{ padding: "10px 12px", color: "#888899" }}>{company.messageCount}</td>
+                  <td style={{ padding: "10px 12px" }}>
+                    <span className={`badge ${company.active ? "badge-active" : ""}`} style={!company.active ? { background: "#2d1515", color: "#f87171", border: "1px solid #2d1515" } : {}}>
+                      {company.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "10px 12px" }}>
+                    <button
+                      className="btn"
+                      style={{
+                        fontSize: 11,
+                        padding: "4px 10px",
+                        background: company.active ? "#2d1515" : "#0f2e1f",
+                        color: company.active ? "#f87171" : "#4ade80",
+                        border: "none"
+                      }}
+                      onClick={() => updateCompany(company.companyId, { active: !company.active, plan: company.plan })}
+                    >
+                      {company.active ? "Deactivate" : "Activate"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </>
+);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -546,6 +701,7 @@ function DashboardPage() {
             { id: "settings", label: "Bot Settings" },
             { id: "conversations", label: "Conversations" },
             { id: "knowledge", label: "Knowledge Base" },
+            ...(isAdmin ? [{ id: "admin", label: "Admin" }] : [])
           ].map(item => (
             <button
               key={item.id}
@@ -576,6 +732,7 @@ function DashboardPage() {
         {activePage === "settings" && renderSettings()}
         {activePage === "knowledge" && renderKnowledgeBase()}
         {activePage === "conversations" && renderConversations()}
+        {activePage === "admin" && isAdmin && renderAdmin()}
       </div>
     </div>
   );
