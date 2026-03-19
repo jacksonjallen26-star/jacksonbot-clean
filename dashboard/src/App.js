@@ -369,6 +369,8 @@ function DashboardPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [adminStatus, setAdminStatus] = useState("");
+  const [pdfs, setPdfs] = useState([]);
+  const [pdfListStatus, setPdfListStatus] = useState("");
 
   // =============================
   // Get companyId from localStorage
@@ -392,6 +394,12 @@ useEffect(() => {
     loadAllCompanies();
   }
 }, [activePage, isAdmin]);
+
+useEffect(() => {
+  if (activePage === "knowledge") {
+    loadPdfs();
+  }
+}, [activePage]);
 
   // =============================
   // Load Company Settings
@@ -472,6 +480,45 @@ useEffect(() => {
       setUploadStatus("❌ Upload failed.");
     }
   };
+
+  // =============================
+// Load PDFs
+// =============================
+const loadPdfs = async () => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/pdfs`, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    const data = await res.json();
+    if (data.success) setPdfs(data.pdfs);
+  } catch (err) {
+    console.error("Failed to load PDFs:", err);
+  }
+};
+
+const deletePdf = async (uploadId) => {
+  if (!window.confirm("Are you sure you want to delete this PDF? This cannot be undone.")) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/delete-pdf`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ uploadId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setPdfListStatus("✅ PDF deleted successfully");
+      loadPdfs();
+      setTimeout(() => setPdfListStatus(""), 3000);
+    }
+  } catch (err) {
+    setPdfListStatus("❌ Failed to delete PDF");
+  }
+};
 
   // =============================
   // Save Settings
@@ -860,6 +907,43 @@ const renderAdmin = () => (
           <button className="btn btn-primary" onClick={uploadPdf} disabled={!pdfFile}>Upload PDF</button>
         </div>
       </div>
+
+      <div className="card">
+  <div className="card-header">
+    <div className="card-title"><div className="card-dot" style={{ background: "#06b6d4" }}></div>Uploaded Documents</div>
+    <button className="btn btn-ghost" style={{ fontSize: 12, padding: "5px 12px" }} onClick={loadPdfs}>Refresh</button>
+  </div>
+
+  {pdfListStatus && <div className={pdfListStatus.includes("✅") ? "status-text" : "error-text"} style={{ marginBottom: 12 }}>{pdfListStatus}</div>}
+
+  {pdfs.length === 0 ? (
+    <div className="empty-state">No documents uploaded yet</div>
+  ) : (
+    pdfs.map(pdf => (
+      <div key={pdf.uploadId} style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "10px 0",
+        borderBottom: "1px solid #1e1e2e"
+      }}>
+        <div>
+          <div style={{ fontSize: 13, color: "#c4c4d4" }}>{pdf.fileName}</div>
+          <div style={{ fontSize: 11, color: "#444466", marginTop: 2 }}>
+            {pdf.chunkCount} chunks · {new Date(pdf.createdAt).toLocaleDateString()}
+          </div>
+        </div>
+        <button
+          className="btn"
+          style={{ fontSize: 11, padding: "4px 10px", background: "#2d1515", color: "#f87171", border: "none" }}
+          onClick={() => deletePdf(pdf.uploadId)}
+        >
+          Delete
+        </button>
+      </div>
+    ))
+  )}
+</div>
     </>
   );
 
