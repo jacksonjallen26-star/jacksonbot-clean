@@ -5,7 +5,7 @@ function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
-  const [botName, setBotName] = useState("Jet AI");
+  const [botName, setBotName] = useState("Askra");
   const [logo, setLogo] = useState("/logo.png");
   const chatEndRef = useRef(null);
 
@@ -58,9 +58,9 @@ function App() {
         const data = await res.json();
 
         // Apply CSS variables dynamically
-        document.documentElement.style.setProperty("--primary-color", sanitizeColor(data.primaryColor, "#4f46e5"));
-        document.documentElement.style.setProperty("--secondary-color", sanitizeColor(data.secondaryColor, "#6366f1"));
-        document.documentElement.style.setProperty("--accent-color", sanitizeColor(data.accentColor, "#4338ca"));
+        document.documentElement.style.setProperty("--primary-color", sanitizeColor(data.primaryColor, "#000000"));
+        document.documentElement.style.setProperty("--secondary-color", sanitizeColor(data.secondaryColor, "#7c3aed"));
+        document.documentElement.style.setProperty("--accent-color", sanitizeColor(data.accentColor, "#52188B"));
         document.documentElement.style.setProperty("--text-color", sanitizeColor(data.textColor, "#ffffff"));
         document.documentElement.style.setProperty("--bot-bubble-color", sanitizeColor(data.botBubbleColor, "#2a2a2a"));
         document.documentElement.style.setProperty("--glow-color", sanitizeColor(data.secondaryColor, "#6366f1"));
