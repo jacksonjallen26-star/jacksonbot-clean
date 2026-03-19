@@ -350,7 +350,7 @@ function DashboardPage() {
   const [activePage, setActivePage] = useState("overview");
   const [companyId, setCompanyId] = useState("");
   const [botName, setBotName] = useState("Askra");
-  const [logoUrl, setLogoUrl] = useState("logo.png");
+  const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#7c3aed");
   const [accentColor, setAccentColor] = useState("#52188B");
@@ -364,7 +364,7 @@ function DashboardPage() {
   const [conversations, setConversations] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [totalMessages, setTotalMessages] = useState(0);
-  const [bubbleLogoUrl, setBubbleLogoUrl] = useState("https://jacksonbot-clean.vercel.app/logo.png");
+  const [bubbleLogoUrl, setBubbleLogoUrl] = useState("");
   const [bubbleColor, setBubbleColor] = useState("#7c3aed");
   const [isAdmin, setIsAdmin] = useState(false);
   const [companies, setCompanies] = useState([]);
@@ -407,7 +407,7 @@ useEffect(() => {
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
         setBotName(data.botName || "Askra");
-        setLogoUrl(data.logoUrl || "logo.png");
+        setLogoUrl(data.logoUrl || "");
         setPrimaryColor(data.primaryColor || "#000000");
         setSecondaryColor(data.secondaryColor || "#7c3aed");
         setAccentColor(data.accentColor || "#52188B");
@@ -415,7 +415,7 @@ useEffect(() => {
         setBotBubbleColor(data.botBubbleColor || "#1a1a28");
         setSystemPrompt(data.systemPrompt || "");
         setOpeningMessage(data.openingMessage || "");
-        setBubbleLogoUrl(data.bubbleLogoUrl || "https://jacksonbot-clean.vercel.app/logo.png");
+        setBubbleLogoUrl(data.bubbleLogoUrl || "");
         setBubbleColor(data.bubbleColor || "#7c3aed");
       } catch (err) {
         console.error("Error loading settings:", err);
