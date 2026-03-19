@@ -69,12 +69,12 @@ const companySchema = new mongoose.Schema({
   botName: { type: String, default: "Askra" },
   logoUrl: { type: String, default: "logo.png" },
 
-  primaryColor: { type: String, default: "#4f46e5" },
-  secondaryColor: { type: String, default: "#6366f1" },
-  accentColor: { type: String, default: "#4338ca" },
+  primaryColor: { type: String, default: "#000000" },
+  secondaryColor: { type: String, default: "#7c3aed" },
+  accentColor: { type: String, default: "#52188B" },
   textColor: { type: String, default: "#ffffff" },
   botBubbleColor: { type: String, default: "#2a2a2a" },
-  bubbleLogoUrl: { type: String, default: "" },
+  bubbleLogoUrl: { type: String, default: "https://jacksonbot-clean.vercel.app/logo.png" },
   bubbleColor: { type: String, default: "#7c3aed" },
 
   // AI Personality
