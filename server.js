@@ -40,7 +40,7 @@ app.use(cors({
     "http://localhost:3000",
     "http://127.0.0.1:5500"
   ],
-  methods: ["GET", "POST"]
+  methods: ["GET", "POST", "DELETE"],
 }));
 
 const chatLimiter = rateLimit({
