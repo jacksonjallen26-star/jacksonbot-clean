@@ -74,7 +74,7 @@ const companySchema = new mongoose.Schema({
   accentColor: { type: String, default: "#52188B" },
   textColor: { type: String, default: "#ffffff" },
   botBubbleColor: { type: String, default: "#2a2a2a" },
-  bubbleLogoUrl: { type: String, default: "https://jacksonbot-clean.vercel.app/logo.png" },
+  bubbleLogoUrl: { type: String, default: "https://app.askra.app/logo.png" },
   bubbleColor: { type: String, default: "#7c3aed" },
 
   // AI Personality
@@ -106,6 +106,20 @@ const chatSchema = new mongoose.Schema({
 });
 
 const Chat = mongoose.model("Chat", chatSchema);
+
+
+// ===============================
+// PDF UPLOAD SCHEMA
+// ===============================
+const pdfSchema = new mongoose.Schema({
+  companyId: { type: String, required: true },
+  fileName: { type: String, required: true },
+  chunkCount: { type: Number, required: true },
+  uploadId: { type: String, required: true, unique: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const PdfUpload = mongoose.model("PdfUpload", pdfSchema);
 
 // ===============================
 // AUTH MIDDLEWARE
@@ -273,29 +287,89 @@ if (!text || text.trim().length === 0)
     // Step 3: Get embeddings from OpenAI
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const index = pinecone.index("jetai-knowledge");
+    const uploadId = `${companyId}-${Date.now()}`;
 
-    const vectors = [];
-    for (let i = 0; i < chunks.length; i++) {
-      const embedding = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: chunks[i]
-      });
+const vectors = [];
+for (let i = 0; i < chunks.length; i++) {
+  const embedding = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: chunks[i]
+  });
 
-      vectors.push({
-        id: `${companyId}-chunk-${i}`,
-        values: embedding.data[0].embedding,
-        metadata: { companyId, text: chunks[i] }
-      });
-    }
+  vectors.push({
+    id: `${uploadId}-chunk-${i}`,
+    values: embedding.data[0].embedding,
+    metadata: { companyId, text: chunks[i], uploadId }
+  });
+}
+// Step 4: Store in Pinecone
+    await index.upsert(vectors);
 
-    // Step 4: Store in Pinecone
+    await PdfUpload.create({
+      companyId,
+      fileName: req.file.originalname,
+      chunkCount: chunks.length,
+      uploadId
+    });
 
-await index.upsert(vectors);
+    res.json({ success: true, chunksStored: chunks.length, fileName: req.file.originalname });
 
-res.json({ success: true, chunksStored: chunks.length });
   } catch (err) {
     console.error("PDF Upload Error:", err);
     res.status(500).json({ error: "Failed to process PDF" });
+  }
+});
+
+// ===============================
+// DELETE PDF
+// ===============================
+app.delete("/api/delete-pdf", authenticateToken, async (req, res) => {
+  try {
+    const companyId = req.companyId;
+    const { uploadId } = req.body;
+
+    if (!uploadId)
+      return res.status(400).json({ error: "uploadId required" });
+
+    // Verify this PDF belongs to this company
+    const pdfRecord = await PdfUpload.findOne({ uploadId, companyId });
+    if (!pdfRecord)
+      return res.status(404).json({ error: "PDF not found" });
+
+    // Delete vectors from Pinecone
+    const index = pinecone.index("jetai-knowledge");
+    const vectorIds = [];
+    for (let i = 0; i < pdfRecord.chunkCount; i++) {
+      vectorIds.push(`${uploadId}-chunk-${i}`);
+    }
+    await index.deleteMany(vectorIds);
+
+    // Delete record from MongoDB
+    await PdfUpload.deleteOne({ uploadId });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Delete PDF Error:", err);
+    res.status(500).json({ error: "Failed to delete PDF" });
+  }
+});
+
+// ===============================
+// GET PDF LIST
+// ===============================
+app.get("/api/pdfs", authenticateToken, async (req, res) => {
+  try {
+    const companyId = req.companyId;
+
+    const pdfs = await PdfUpload.find({ companyId })
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, pdfs });
+
+  } catch (err) {
+    console.error("Get PDFs Error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
