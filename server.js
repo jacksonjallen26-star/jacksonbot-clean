@@ -152,28 +152,26 @@ app.get("/", (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, companyId, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-     if (!name || !companyId || !email || !password)
+    if (!name || !email || !password)
       return res.status(400).json({ error: "All fields required" });
 
-     if (password.length < 8)
-  return res.status(400).json({ error: "Password must be at least 8 characters" });
+    if (password.length < 8)
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
 
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-     if (!emailValid)
-  return res.status(400).json({ error: "Invalid email format" });
-
-     if (companyId.includes(" "))
-  return res.status(400).json({ error: "Company ID cannot contain spaces" });
+    if (!emailValid)
+      return res.status(400).json({ error: "Invalid email format" });
 
     const existing = await Company.findOne({ email });
     if (existing)
       return res.status(400).json({ error: "Email already registered" });
 
-    const existingCompanyId = await Company.findOne({ companyId });
-    if (existingCompanyId)
-  return res.status(400).json({ error: "Company ID already taken" });
+    // Auto generate companyId from business name
+    const baseId = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    const suffix = Math.random().toString(36).slice(2, 7);
+    const companyId = `${baseId}-${suffix}`;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -185,12 +183,12 @@ app.post("/api/register", async (req, res) => {
     });
 
     const token = jwt.sign(
-      { companyId: company.companyId , role: company.role },
+      { companyId: company.companyId, role: company.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.json({ success: true, token, companyId: company.companyId });
+    res.json({ success: true, token, companyId: company.companyId, role: company.role });
 
   } catch (err) {
     console.error("Register error:", err);
