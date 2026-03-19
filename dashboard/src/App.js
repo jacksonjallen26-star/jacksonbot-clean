@@ -407,7 +407,7 @@ useEffect(() => {
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
         setBotName(data.botName || "Askra");
-        setLogoUrl(data.logoUrl || "");
+        setLogoUrl(data.logoUrl || "https://jacksonbot-clean.vercel.app/logo.png");
         setPrimaryColor(data.primaryColor || "#000000");
         setSecondaryColor(data.secondaryColor || "#7c3aed");
         setAccentColor(data.accentColor || "#52188B");

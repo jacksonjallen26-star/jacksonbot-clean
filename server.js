@@ -67,7 +67,7 @@ const companySchema = new mongoose.Schema({
 
   // Branding / Theme
   botName: { type: String, default: "Askra" },
-  logoUrl: { type: String, default: "logo.png" },
+  logoUrl: { type: String, default: "" },
 
   primaryColor: { type: String, default: "#000000" },
   secondaryColor: { type: String, default: "#7c3aed" },
