@@ -349,11 +349,11 @@ function OnboardingPage() {
 function DashboardPage() {
   const [activePage, setActivePage] = useState("overview");
   const [companyId, setCompanyId] = useState("");
-  const [botName, setBotName] = useState("Jet AI");
-  const [logoUrl, setLogoUrl] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#7c3aed");
-  const [secondaryColor, setSecondaryColor] = useState("#4f46e5");
-  const [accentColor, setAccentColor] = useState("#4338ca");
+  const [botName, setBotName] = useState("Askra");
+  const [logoUrl, setLogoUrl] = useState("logo.png");
+  const [primaryColor, setPrimaryColor] = useState("#000000");
+  const [secondaryColor, setSecondaryColor] = useState("#7c3aed");
+  const [accentColor, setAccentColor] = useState("#52188B");
   const [textColor, setTextColor] = useState("#ffffff");
   const [botBubbleColor, setBotBubbleColor] = useState("#1a1a28");
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -364,7 +364,7 @@ function DashboardPage() {
   const [conversations, setConversations] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [totalMessages, setTotalMessages] = useState(0);
-  const [bubbleLogoUrl, setBubbleLogoUrl] = useState("");
+  const [bubbleLogoUrl, setBubbleLogoUrl] = useState("https://jacksonbot-clean.vercel.app/logo.png");
   const [bubbleColor, setBubbleColor] = useState("#7c3aed");
   const [isAdmin, setIsAdmin] = useState(false);
   const [companies, setCompanies] = useState([]);
@@ -407,15 +407,15 @@ useEffect(() => {
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
         setBotName(data.botName || "Askra");
-        setLogoUrl(data.logoUrl || "");
-        setPrimaryColor(data.primaryColor || "#7c3aed");
-        setSecondaryColor(data.secondaryColor || "#4f46e5");
-        setAccentColor(data.accentColor || "#4338ca");
+        setLogoUrl(data.logoUrl || "logo.png");
+        setPrimaryColor(data.primaryColor || "#000000");
+        setSecondaryColor(data.secondaryColor || "#7c3aed");
+        setAccentColor(data.accentColor || "#52188B");
         setTextColor(data.textColor || "#ffffff");
         setBotBubbleColor(data.botBubbleColor || "#1a1a28");
         setSystemPrompt(data.systemPrompt || "");
         setOpeningMessage(data.openingMessage || "");
-        setBubbleLogoUrl(data.bubbleLogoUrl || "");
+        setBubbleLogoUrl(data.bubbleLogoUrl || "https://jacksonbot-clean.vercel.app/logo.png");
         setBubbleColor(data.bubbleColor || "#7c3aed");
       } catch (err) {
         console.error("Error loading settings:", err);
@@ -798,8 +798,8 @@ const renderAdmin = () => (
       <input type="color" value={bubbleColor} onChange={(e) => setBubbleColor(e.target.value)} />
     </div>
     <div className="form-group">
-      <label>Custom Logo URL (optional)</label>
-      <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://... (leave empty to use Askra logo)" />
+      <label>Custom Logo URL (optional, leave blank for basic chat icon)</label>
+      <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://... " />
     </div>
   </div>
   <div style={{ marginTop: 12 }}>
