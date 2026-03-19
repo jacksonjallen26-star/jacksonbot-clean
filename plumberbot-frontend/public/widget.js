@@ -1,4 +1,11 @@
 (function () {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init() {
   var config = window.AskraConfig || {};
   var companyId = config.companyId;
 
@@ -189,4 +196,5 @@
 
   document.body.appendChild(chatWindow);
   document.body.appendChild(bubble);
+  }
 })();
