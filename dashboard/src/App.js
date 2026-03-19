@@ -123,6 +123,227 @@ function LoginPage() {
 }
 
 // =============================
+// Register Page
+// =============================
+function RegisterPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("companyId", data.companyId);
+      localStorage.setItem("role", data.role);
+      navigate("/onboarding");
+
+    } catch (err) {
+      setError("Something went wrong");
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleRegister();
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0a0a0f",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      <div style={{
+        background: "#0f0f17",
+        border: "1px solid #1e1e2e",
+        borderRadius: 12,
+        padding: "40px 36px",
+        width: "100%",
+        maxWidth: 380
+      }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 4 }}>
+            Get started free
+            <span style={{
+              fontSize: 10,
+              background: "#7c3aed22",
+              color: "#a78bfa",
+              border: "1px solid #7c3aed44",
+              padding: "2px 6px",
+              borderRadius: 4,
+              marginLeft: 8,
+              fontFamily: "monospace"
+            }}>BETA</span>
+          </div>
+          <div style={{ fontSize: 13, color: "#555577" }}>Create your Askra account</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="form-group">
+            <label>Business Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Joe's Plumbing"
+            />
+          </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="you@company.com"
+            />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="At least 8 characters"
+            />
+          </div>
+        </div>
+
+        {error && <div className="error-text" style={{ marginTop: 10 }}>{error}</div>}
+
+        <button
+          className="btn btn-primary"
+          onClick={handleRegister}
+          disabled={loading}
+          style={{ width: "100%", marginTop: 20, justifyContent: "center", padding: "10px" }}
+        >
+          {loading ? "Creating account..." : "Create free account"}
+        </button>
+
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
+          Already have an account?{" "}
+          <a href="/login" style={{ color: "#a78bfa", textDecoration: "none" }}>Sign in</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// =============================
+// Onboarding Page
+// =============================
+function OnboardingPage() {
+  const companyId = localStorage.getItem("companyId");
+  const navigate = useNavigate();
+
+  const embedCode = `<script>
+  window.AskraConfig = { companyId: "${companyId}" };
+</script>
+<script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`;
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0a0a0f",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px"
+    }}>
+      <div style={{
+        background: "#0f0f17",
+        border: "1px solid #1e1e2e",
+        borderRadius: 12,
+        padding: "40px 36px",
+        width: "100%",
+        maxWidth: 560
+      }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 22, fontWeight: 600, color: "#fff", marginBottom: 8, letterSpacing: -0.5 }}>
+            🎉 You're all set!
+          </div>
+          <div style={{ fontSize: 14, color: "#555577", lineHeight: 1.6 }}>
+            Your bot is ready. Paste the code below into your website's HTML before the closing <code style={{ color: "#a78bfa", background: "#1e1a3a", padding: "1px 6px", borderRadius: 4 }}>&lt;/body&gt;</code> tag.
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Your Embed Code</div>
+          <div style={{
+            background: "#0a0a0f",
+            border: "1px solid #1e1e2e",
+            borderRadius: 8,
+            padding: "16px",
+            fontFamily: "monospace",
+            fontSize: 12,
+            color: "#a78bfa",
+            lineHeight: 1.6,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all"
+          }}>
+            {embedCode}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="btn btn-primary"
+            onClick={handleCopy}
+            style={{ flex: 1, justifyContent: "center" }}
+          >
+            {copied ? "✅ Copied!" : "Copy Embed Code"}
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => navigate("/dashboard")}
+            style={{ flex: 1, justifyContent: "center" }}
+          >
+            Go to Dashboard
+          </button>
+        </div>
+
+        <div style={{ marginTop: 20, padding: "14px 16px", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 8 }}>
+          <div style={{ fontSize: 12, color: "#555577", marginBottom: 4 }}>Your Company ID</div>
+          <div style={{ fontSize: 13, color: "#c4c4d4", fontFamily: "monospace" }}>{companyId}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// =============================
 // Dashboard Page
 // =============================
 function DashboardPage() {
@@ -748,6 +969,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={
