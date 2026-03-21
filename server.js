@@ -155,7 +155,7 @@ const authenticateToken = (req, res, next) => {
 // PLAN LIMITS
 // ===============================
 const PLAN_LIMITS = {
-  free:    { messages: 100,    pdfs: 1  },
+  free:    { messages: 2,    pdfs: 1  },
   starter: { messages: 5000,   pdfs: 10 },
   pro:     { messages: 50000,  pdfs: 75 }
 };
