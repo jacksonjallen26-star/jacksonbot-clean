@@ -118,6 +118,11 @@ function LoginPage() {
           Sign In
         </button>
       </div>
+
+      <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
+  Don't have an account?{" "}
+  <a href="/register" style={{ color: "#a78bfa", textDecoration: "none" }}>Get started free</a>
+</div>
     </div>
   );
 }
@@ -207,21 +212,27 @@ function RegisterPage() {
           <div style={{ fontSize: 13, color: "#555577" }}>Create your Askra account</div>
         </div>
 
-        <div style={{
-  background: "#1e1a3a",
-  border: "1px solid #7c3aed33",
-  borderRadius: 8,
-  padding: "10px 14px",
-  marginBottom: 16,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between"
-}}>
-  <div>
-    <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1 }}>Selected Plan</div>
-    <div style={{ fontSize: 14, color: "#a78bfa", fontWeight: 500, textTransform: "capitalize", marginTop: 2 }}>{selectedPlan}</div>
-  </div>
-  <a href="https://askra.app/#pricing" style={{ fontSize: 11, color: "#555577", textDecoration: "none" }}>Change →</a>
+        <div className="form-group" style={{ marginBottom: 16 }}>
+  <label>Plan</label>
+  <select
+    value={selectedPlan}
+    onChange={(e) => setSelectedPlan(e.target.value)}
+    style={{
+      background: "#0a0a0f",
+      border: "1px solid #1e1e2e",
+      borderRadius: 6,
+      padding: "8px 12px",
+      color: "#e2e2e8",
+      fontSize: 13,
+      fontFamily: "DM Sans, sans-serif",
+      width: "100%",
+      outline: "none"
+    }}
+  >
+    <option value="free">Free — $0/mo · 100 messages · 1 PDF</option>
+    <option value="starter">Starter — $29/mo · 5,000 messages · 10 PDFs</option>
+    <option value="pro">Pro — $79/mo · 50,000 messages · 75 PDFs</option>
+  </select>
 </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
