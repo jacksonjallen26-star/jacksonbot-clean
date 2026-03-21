@@ -132,6 +132,15 @@ function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState("free");
+
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get("plan");
+  if (plan && ["free", "starter", "pro"].includes(plan)) {
+    setSelectedPlan(plan);
+  }
+}, []);
 
   const handleRegister = async () => {
     setLoading(true);
@@ -139,7 +148,7 @@ function RegisterPage() {
       const res = await fetch(`${BACKEND_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, plan: selectedPlan })
       });
 
       const data = await res.json();
@@ -197,6 +206,23 @@ function RegisterPage() {
           </div>
           <div style={{ fontSize: 13, color: "#555577" }}>Create your Askra account</div>
         </div>
+
+        <div style={{
+  background: "#1e1a3a",
+  border: "1px solid #7c3aed33",
+  borderRadius: 8,
+  padding: "10px 14px",
+  marginBottom: 16,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between"
+}}>
+  <div>
+    <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1 }}>Selected Plan</div>
+    <div style={{ fontSize: 14, color: "#a78bfa", fontWeight: 500, textTransform: "capitalize", marginTop: 2 }}>{selectedPlan}</div>
+  </div>
+  <a href="https://askra.app/#pricing" style={{ fontSize: 11, color: "#555577", textDecoration: "none" }}>Change →</a>
+</div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="form-group">

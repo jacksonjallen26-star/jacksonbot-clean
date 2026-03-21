@@ -155,7 +155,7 @@ const authenticateToken = (req, res, next) => {
 // PLAN LIMITS
 // ===============================
 const PLAN_LIMITS = {
-  free:    { messages: 2,    pdfs: 1  },
+  free:    { messages: 100,    pdfs: 1  },
   starter: { messages: 5000,   pdfs: 10 },
   pro:     { messages: 50000,  pdfs: 75 }
 };
@@ -175,7 +175,7 @@ app.get("/", (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, plan } = req.body;
 
     if (!name || !email || !password)
       return res.status(400).json({ error: "All fields required" });
@@ -202,7 +202,8 @@ app.post("/api/register", async (req, res) => {
       name,
       companyId,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      plan: plan || "free"
     });
 
     const token = jwt.sign(
