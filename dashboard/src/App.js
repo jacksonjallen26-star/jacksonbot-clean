@@ -117,13 +117,13 @@ function LoginPage() {
         >
           Sign In
         </button>
-      </div>
 
-      <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577", width: "100%" }}>
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577", width: "100%" }}>
   Don't have an account?{" "}
   <a href="/register" style={{ color: "#a78bfa", textDecoration: "none" }}>Get started free</a>
 </div>
-    </div>
+      </div>
+  </div>
   );
 }
 
