@@ -248,9 +248,19 @@ app.post("/api/login", async (req, res) => {
 app.post("/api/upload-pdf", authenticateToken, upload.single("pdf"), async (req, res) => {
   try {
     const companyId = req.companyId;
+const company = await Company.findOne({ companyId });
+if (!company)
+  return res.status(404).json({ error: "Company not found" });
 
     if (!req.file)
       return res.status(400).json({ error: "No PDF uploaded" });
+
+// Check PDF limit
+const pdfLimits = PLAN_LIMITS[company.plan] || PLAN_LIMITS.free;
+const pdfCount = await PdfUpload.countDocuments({ companyId });
+
+if (pdfCount >= pdfLimits.pdfs)
+  return res.status(429).json({ error: `You have reached your ${company.plan} plan limit of ${pdfLimits.pdfs} PDF uploads. Please upgrade your plan.` });
 
     // Step 1: Extract text from PDF
     const pdfParser = new PDFParser();
@@ -499,6 +509,21 @@ app.post("/chat", chatLimiter, async (req, res) => {
 
     if (!company.active)
       return res.status(403).json({ reply: "Subscription inactive." });
+
+    // Check message limit
+const limits = PLAN_LIMITS[company.plan] || PLAN_LIMITS.free;
+const startOfMonth = new Date();
+startOfMonth.setDate(1);
+startOfMonth.setHours(0, 0, 0, 0);
+
+const messageCount = await Chat.countDocuments({
+  companyId,
+  role: "user",
+  timestamp: { $gte: startOfMonth }
+});
+
+if (messageCount >= limits.messages)
+  return res.status(429).json({ reply: `You have reached your ${company.plan} plan limit of ${limits.messages} messages this month. Please upgrade your plan.` });
 
     // Step 1: Search Pinecone for relevant chunks
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
