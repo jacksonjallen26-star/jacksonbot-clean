@@ -119,7 +119,7 @@ function LoginPage() {
         </button>
       </div>
 
-      <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
+      <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577", width: "100%" }}>
   Don't have an account?{" "}
   <a href="/register" style={{ color: "#a78bfa", textDecoration: "none" }}>Get started free</a>
 </div>
@@ -229,9 +229,9 @@ function RegisterPage() {
       outline: "none"
     }}
   >
-    <option value="free">Free — $0/mo · 100 messages · 1 PDF</option>
-    <option value="starter">Starter — $29/mo · 5,000 messages · 10 PDFs</option>
-    <option value="pro">Pro — $79/mo · 50,000 messages · 75 PDFs</option>
+    <option value="free">Free — $0/mo</option>
+    <option value="starter">Starter — $29/mo</option>
+    <option value="pro">Pro — $79/mo</option>
   </select>
 </div>
 
