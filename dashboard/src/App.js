@@ -60,6 +60,23 @@ function LoginPage() {
       alignItems: "center",
       justifyContent: "center"
     }}>
+      <a href="https://askra.app" style={{
+  position: "fixed",
+  top: 20,
+  left: 24,
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  color: "#555577",
+  textDecoration: "none",
+  fontSize: 13,
+  transition: "color 0.15s"
+}}
+onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
+onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
+>
+  ← Back to Askra
+</a>
       <div style={{
         background: "#0f0f17",
         border: "1px solid #1e1e2e",
@@ -187,6 +204,23 @@ function RegisterPage() {
       alignItems: "center",
       justifyContent: "center"
     }}>
+      <a href="https://askra.app" style={{
+  position: "fixed",
+  top: 20,
+  left: 24,
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  color: "#555577",
+  textDecoration: "none",
+  fontSize: 13,
+  transition: "color 0.15s"
+}}
+onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
+onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
+>
+  ← Back to Askra
+</a>
       <div style={{
         background: "#0f0f17",
         border: "1px solid #1e1e2e",
@@ -276,7 +310,7 @@ function RegisterPage() {
           disabled={loading}
           style={{ width: "100%", marginTop: 20, justifyContent: "center", padding: "10px" }}
         >
-          {loading ? "Creating account..." : "Create free account"}
+          {loading ? "Creating account..." : "Create account"}
         </button>
 
         <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
