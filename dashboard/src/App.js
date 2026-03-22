@@ -165,32 +165,56 @@ function RegisterPage() {
 }, []);
 
   const handleRegister = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, plan: selectedPlan })
-      });
+  setLoading(true);
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, plan: selectedPlan })
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Registration failed");
-        setLoading(false);
-        return;
-      }
+    if (!res.ok) {
+      setError(data.error || "Registration failed");
+      setLoading(false);
+      return;
+    }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("companyId", data.companyId);
-      localStorage.setItem("role", data.role);
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("companyId", data.companyId);
+    localStorage.setItem("role", data.role);
+
+    // Free plan goes straight to onboarding
+    if (selectedPlan === "free") {
       navigate("/onboarding");
+      return;
+    }
 
-    } catch (err) {
-      setError("Something went wrong");
+    // Paid plans go to Stripe checkout
+    const checkoutRes = await fetch(`${BACKEND_URL}/api/create-checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${data.token}`
+      },
+      body: JSON.stringify({ plan: selectedPlan })
+    });
+
+    const checkoutData = await checkoutRes.json();
+
+    if (checkoutData.success) {
+      window.location.href = checkoutData.url;
+    } else {
+      setError("Failed to create checkout session");
       setLoading(false);
     }
-  };
+
+  } catch (err) {
+    setError("Something went wrong");
+    setLoading(false);
+  }
+};
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleRegister();
