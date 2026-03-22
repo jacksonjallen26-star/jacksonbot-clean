@@ -1169,7 +1169,7 @@ const renderAdmin = () => (
             <div className="avatar">{initials}</div>
             <div>
               <div className="company-name">{companyId || "Loading..."}</div>
-              <div className="company-plan">Starter Plan</div>
+              <div className="company-plan">{plan.charAt(0).toUpperCase() + plan.slice(1)} Plan</div>
             </div>
           </div>
           <button className="btn btn-danger" onClick={handleLogout} style={{ width: "100%", marginTop: 8, justifyContent: "center" }}>
