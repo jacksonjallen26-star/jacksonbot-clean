@@ -507,6 +507,7 @@ function DashboardPage() {
   const [adminStatus, setAdminStatus] = useState("");
   const [pdfs, setPdfs] = useState([]);
   const [pdfListStatus, setPdfListStatus] = useState("");
+  const [plan, setPlan] = useState("free");
 
   // =============================
   // Get companyId from localStorage
