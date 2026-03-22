@@ -489,7 +489,8 @@ app.get("/api/get-settings", async (req, res) => {
       botBubbleColor: company.botBubbleColor,
       systemPrompt: company.systemPromp,
       bubbleLogoUrl: company.bubbleLogoUrl,
-      bubbleColor: company.bubbleColor
+      bubbleColor: company.bubbleColor,
+      plan: company.plan
     });
 
   } catch (err) {

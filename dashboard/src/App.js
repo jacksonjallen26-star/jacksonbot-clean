@@ -561,6 +561,7 @@ useEffect(() => {
         setOpeningMessage(data.openingMessage || "");
         setBubbleLogoUrl(data.bubbleLogoUrl || "");
         setBubbleColor(data.bubbleColor || "#7c3aed");
+        setPlan(data.plan || "free");
       } catch (err) {
         console.error("Error loading settings:", err);
       }
@@ -864,7 +865,13 @@ const renderAdmin = () => (
           <div className="stat-label">Status</div>
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
             <span className="badge badge-active">Active</span>
-            <span className="badge badge-starter">Starter</span>
+            <span className={`badge badge-${plan}`} style={
+  plan === "pro" ? { background: "#0c2a3a", color: "#38bdf8", border: "1px solid #0369a144" } :
+  plan === "starter" ? {} :
+  { background: "#1a1a28", color: "#888899", border: "1px solid #33334444" }
+}>
+  {plan.charAt(0).toUpperCase() + plan.slice(1)}
+</span>
           </div>
           <div className="stat-sub" style={{ marginTop: 8, fontFamily: "monospace", fontSize: 10 }}>{companyId}</div>
         </div>
