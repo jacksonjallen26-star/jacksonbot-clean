@@ -269,6 +269,45 @@ onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
   </select>
 </div>
 
+<div style={{
+  background: "#0a0a0f",
+  border: "1px solid #1e1e2e",
+  borderRadius: 8,
+  padding: "14px 16px",
+  marginBottom: 16
+}}>
+  <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+    What's included
+  </div>
+  {selectedPlan === "free" && (
+    <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 100 messages per month</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 1 PDF upload</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Basic customization</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Embed on any website</li>
+    </ul>
+  )}
+  {selectedPlan === "starter" && (
+    <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 5,000 messages per month</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 10 PDF uploads</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Full customization</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Chat history</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Email support</li>
+    </ul>
+  )}
+  {selectedPlan === "pro" && (
+    <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 50,000 messages per month</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 75 PDF uploads</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Full customization</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Chat history</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Priority support</li>
+      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Early access to new features</li>
+    </ul>
+  )}
+</div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="form-group">
             <label>Business Name</label>
