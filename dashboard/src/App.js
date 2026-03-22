@@ -192,6 +192,8 @@ function RegisterPage() {
     }
 
     // Paid plans go to Stripe checkout
+    console.log("Plan is:", selectedPlan);
+    console.log("Token is:", data.token);
     const checkoutRes = await fetch(`${BACKEND_URL}/api/create-checkout`, {
       method: "POST",
       headers: {
