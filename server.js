@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const OpenAI = require("openai");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { Pinecone } = require("@pinecone-database/pinecone");
@@ -28,6 +29,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ===============================
 // MIDDLEWARE
 // ===============================
+app.use("/api/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "10kb" }));
 
 app.use(cors({
@@ -705,6 +707,70 @@ app.post("/api/admin/update-company", authenticateToken, requireAdmin, async (re
     console.error("Admin update error:", err);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+// ===============================
+// CREATE CHECKOUT SESSION
+// ===============================
+app.post("/api/create-checkout", authenticateToken, async (req, res) => {
+  try {
+    const { plan } = req.body;
+    const companyId = req.companyId;
+
+    if (!["starter", "pro"].includes(plan))
+      return res.status(400).json({ error: "Invalid plan" });
+
+    const priceId = plan === "starter"
+      ? process.env.STRIPE_STARTER_PRICE
+      : process.env.STRIPE_PRO_PRICE;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "subscription",
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `https://app.askra.app/onboarding?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://app.askra.app/register?plan=${plan}`,
+      metadata: { companyId }
+    });
+
+    res.json({ success: true, url: session.url });
+
+  } catch (err) {
+    console.error("Checkout error:", err);
+    res.status(500).json({ error: "Failed to create checkout session" });
+  }
+});
+
+// ===============================
+// STRIPE WEBHOOK
+// ===============================
+app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error("Webhook error:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const companyId = session.metadata.companyId;
+
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const priceId = lineItems.data[0].price.id;
+
+    let plan = "free";
+    if (priceId === process.env.STRIPE_STARTER_PRICE) plan = "starter";
+    if (priceId === process.env.STRIPE_PRO_PRICE) plan = "pro";
+
+    await Company.findOneAndUpdate({ companyId }, { plan });
+    console.log(`✅ Plan updated to ${plan} for ${companyId}`);
+  }
+
+  res.json({ received: true });
 });
 
 // ===============================
