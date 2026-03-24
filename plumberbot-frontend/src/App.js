@@ -67,6 +67,10 @@ function App() {
 
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
+        if (data.openingMessage) {
+        setMessages([{ type: "bot", text: data.openingMessage, timestamp: new Date() }]);
+}
+
 
       } catch (err) {
         console.error("Failed to load settings:", err);
