@@ -67,8 +67,6 @@ function App() {
 
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
-        if (data.openingMessage) {
-        setMessages([{ type: "bot", text: data.openingMessage, timestamp: new Date() }]);
 }
 
 
@@ -84,20 +82,30 @@ function App() {
   // LOAD CHAT HISTORY
   // =========================
   useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/history?userId=${userId}&companyId=${companyId}`
-        );
+  const loadHistory = async () => {
+    try {
+      const settingsRes = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/get-settings?companyId=${companyId}`
+      );
+      const settingsData = settingsRes.ok ? await settingsRes.json() : {};
 
-        if (!res.ok) return;
+      const res = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/history?userId=${userId}&companyId=${companyId}`
+      );
 
-        const data = await res.json();
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      if (settingsData.openingMessage && data.length === 0) {
+        setMessages([{ type: "bot", text: settingsData.openingMessage, timestamp: new Date() }]);
+      } else {
         setMessages(data);
-      } catch (err) {
-        console.error("Failed to load history");
       }
-    };
+    } catch (err) {
+      console.error("Failed to load history");
+    }
+  };
 
     loadHistory();
   }, [companyId, userId]);
