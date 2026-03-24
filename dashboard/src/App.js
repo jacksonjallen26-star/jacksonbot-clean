@@ -508,6 +508,8 @@ function DashboardPage() {
   const [pdfs, setPdfs] = useState([]);
   const [pdfListStatus, setPdfListStatus] = useState("");
   const [plan, setPlan] = useState("free");
+  const isPaidPlan = plan === "starter" || plan === "pro";
+
 
   // =============================
   // Get companyId from localStorage
