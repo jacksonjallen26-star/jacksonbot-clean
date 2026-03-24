@@ -67,7 +67,7 @@ function App() {
 
         if (data.botName) setBotName(data.botName);
         if (data.logoUrl) setLogo(data.logoUrl);
-}
+
 
 
       } catch (err) {
