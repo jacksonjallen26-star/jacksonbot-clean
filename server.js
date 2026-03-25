@@ -487,7 +487,7 @@ app.get("/api/get-settings", async (req, res) => {
       accentColor: company.accentColor,
       textColor: company.textColor,
       botBubbleColor: company.botBubbleColor,
-      systemPrompt: company.systemPromp,
+      systemPrompt: company.systemPrompt,
       openingMessage: company.openingMessage,
       bubbleLogoUrl: company.bubbleLogoUrl,
       bubbleColor: company.bubbleColor,
