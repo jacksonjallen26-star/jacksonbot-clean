@@ -679,6 +679,28 @@ app.get("/api/conversations", authenticateToken, async (req, res) => {
 });
 
 // ===============================
+// GET USAGE
+// ===============================
+app.get("/api/usage", authenticateToken, async (req, res) => {
+  try {
+    const companyId = req.companyId;
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const count = await Chat.countDocuments({
+      companyId,
+      role: "user",
+      timestamp: { $gte: startOfMonth }
+    });
+
+    res.json({ success: true, monthlyMessages: count });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
 // ADMIN — GET ALL COMPANIES
 // ===============================
 app.get("/api/admin/companies", authenticateToken, requireAdmin, async (req, res) => {

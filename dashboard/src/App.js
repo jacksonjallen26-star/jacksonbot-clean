@@ -536,6 +536,7 @@ function DashboardPage() {
   const [pdfs, setPdfs] = useState([]);
   const [pdfListStatus, setPdfListStatus] = useState("");
   const [plan, setPlan] = useState("free");
+  const [monthlyMessages, setMonthlyMessages] = useState(0);
 
 // =============================
   // Get companyId from localStorage
@@ -598,6 +599,25 @@ useEffect(() => {
 
     fetchSettings();
   }, [companyId]);
+
+
+  // =============================
+  // Load Usage
+  // =============================
+  useEffect(() => {
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/usage`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
+      const data = await res.json();
+      if (data.success) setMonthlyMessages(data.monthlyMessages);
+    } catch (err) {
+      console.error("Failed to load usage");
+    }
+  };
+  fetchUsage();
+}, []);
 
   // =============================
   // Load Conversations
@@ -896,7 +916,12 @@ const renderAdmin = () => (
   // =============================
   // Pages
   // =============================
-  const renderOverview = () => (
+  const renderOverview = () => {
+  const planLimits = { free: 100, starter: 5000, pro: 50000 };
+  const limit = planLimits[plan] || 100;
+  const remaining = Math.max(0, limit - monthlyMessages);
+  const usedPercent = Math.min(100, Math.round((monthlyMessages / limit) * 100));
+  return (
     <>
       <div className="page-header">
         <div className="page-title">Overview</div>
@@ -915,16 +940,29 @@ const renderAdmin = () => (
           <div className="stat-sub">Unique users</div>
         </div>
         <div className="stat-card">
+          <div className="stat-label">Messages This Month</div>
+          <div className="stat-value">{monthlyMessages}<span style={{ fontSize: 13, color: "#555577" }}>/{limit}</span></div>
+          <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: "#1e1e2e" }}>
+            <div style={{
+              height: "100%", borderRadius: 2,
+              width: `${usedPercent}%`,
+              background: usedPercent >= 90 ? "#f87171" : usedPercent >= 70 ? "#fbbf24" : "#4ade80",
+              transition: "width 0.3s"
+            }} />
+          </div>
+          <div className="stat-sub" style={{ marginTop: 4 }}>{remaining} remaining</div>
+        </div>
+        <div className="stat-card">
           <div className="stat-label">Status</div>
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
             <span className="badge badge-active">Active</span>
             <span className={`badge badge-${plan}`} style={
-  plan === "pro" ? { background: "#0c2a3a", color: "#38bdf8", border: "1px solid #0369a144" } :
-  plan === "starter" ? {} :
-  { background: "#1a1a28", color: "#888899", border: "1px solid #33334444" }
-}>
-  {plan.charAt(0).toUpperCase() + plan.slice(1)}
-</span>
+              plan === "pro" ? { background: "#0c2a3a", color: "#38bdf8", border: "1px solid #0369a144" } :
+              plan === "starter" ? {} :
+              { background: "#1a1a28", color: "#888899", border: "1px solid #33334444" }
+            }>
+              {plan.charAt(0).toUpperCase() + plan.slice(1)}
+            </span>
           </div>
           <div className="stat-sub" style={{ marginTop: 8, fontFamily: "monospace", fontSize: 10 }}>{companyId}</div>
         </div>
@@ -971,7 +1009,7 @@ const renderAdmin = () => (
       </div>
     </>
   );
-
+};
   const renderSettings = () => (
   <>
     <div className="page-header">
