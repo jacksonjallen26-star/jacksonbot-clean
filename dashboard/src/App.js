@@ -478,6 +478,34 @@ function OnboardingPage() {
   );
 }
 
+function LockedField({ children, plan }) {
+  const isLocked = plan === "free";
+
+  if (!isLocked) return children;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ pointerEvents: "none", opacity: 0.4, userSelect: "none" }}>
+        {children}
+      </div>
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 6, cursor: "pointer", borderRadius: 6,
+          background: "rgba(10,10,20,0.5)",
+        }}
+        onClick={() => window.location.href = "/dashboard?upgrade=true"}
+      >
+        <span style={{ fontSize: 13 }}>🔒</span>
+        <span style={{ fontSize: 12, color: "#a78bfa", fontWeight: 600 }}>
+          Upgrade to unlock
+        </span>
+      </div>
+    </div>
+  );
+}
+
 
 // =============================
 // Dashboard Page
@@ -921,103 +949,85 @@ const renderAdmin = () => (
   );
 
   const renderSettings = () => (
-    <>
-      <div className="page-header">
-        <div className="page-title">Bot Settings</div>
-        <div className="page-subtitle">Customize your bot's appearance and behavior</div>
-      </div>
+  <>
+    <div className="page-header">
+      <div className="page-title">Bot Settings</div>
+      <div className="page-subtitle">Customize your bot's appearance and behavior</div>
+    </div>
 
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title"><div className="card-dot"></div>Identity</div>
-        </div>
-        <div className="form-row">
+    <div className="card">
+      <div className="card-header">
+        <div className="card-title"><div className="card-dot"></div>Identity</div>
+      </div>
+      <div className="form-row">
+        <LockedField plan={plan}>
           <div className="form-group">
             <label>Bot Name</label>
             <input type="text" value={botName} onChange={(e) => setBotName(e.target.value)} />
           </div>
+        </LockedField>
+        <LockedField plan={plan}>
           <div className="form-group">
             <label>Logo URL</label>
             <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
           </div>
-        </div>
+        </LockedField>
+      </div>
+      <LockedField plan={plan}>
         <div className="form-group full">
           <label>Opening Message</label>
           <input type="text" value={openingMessage} onChange={(e) => setOpeningMessage(e.target.value)} placeholder="Hi! How can I help you today?" />
         </div>
-      </div>
+      </LockedField>
+      <LockedField plan={plan}>
+        <div className="form-group full">
+          <label>Bubble Logo URL</label>
+          <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://..." />
+        </div>
+      </LockedField>
+    </div>
 
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title"><div className="card-dot" style={{ background: "#06b6d4" }}></div>AI Behavior</div>
-        </div>
-        <div className="form-group">
-          <label>System Prompt</label>
-          <textarea
-            rows={5}
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            placeholder="You are a helpful assistant for this business..."
-          />
-        </div>
+    {/* System Prompt — always unlocked */}
+    <div className="card">
+      <div className="card-header">
+        <div className="card-title"><div className="card-dot"></div>Behavior</div>
       </div>
+      <div className="form-group full">
+        <label>System Prompt</label>
+        <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={5} />
+      </div>
+    </div>
 
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title"><div className="card-dot" style={{ background: "#f59e0b" }}></div>Brand Colors</div>
-        </div>
-        <div className="color-row">
-          <div className="color-group"><label>Primary</label><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} /></div>
-          <div className="color-group"><label>Secondary</label><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} /></div>
-          <div className="color-group"><label>Accent</label><input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} /></div>
-          <div className="color-group"><label>Text</label><input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} /></div>
-          <div className="color-group"><label>Bubble</label><input type="color" value={botBubbleColor} onChange={(e) => setBotBubbleColor(e.target.value)} /></div>
-        </div>
-        <div className="btn-row">
-          {status && <div className={status.includes("✅") ? "status-text" : "error-text"}>{status}</div>}
-          {!status && <div></div>}
-          <button className="btn btn-primary" onClick={saveSettings}>Save Changes</button>
-        </div>
+    {/* Colors — all locked for free */}
+    <div className="card">
+      <div className="card-header">
+        <div className="card-title"><div className="card-dot"></div>Appearance</div>
       </div>
-      <div className="card">
-  <div className="card-header">
-    <div className="card-title"><div className="card-dot" style={{ background: "#ec4899" }}></div>Chat Bubble</div>
-  </div>
-  <div className="form-row">
-    <div className="form-group">
-      <label>Bubble Color</label>
-      <input type="color" value={bubbleColor} onChange={(e) => setBubbleColor(e.target.value)} />
+      <div className="form-row">
+        {[
+          { label: "Primary Color", value: primaryColor, set: setPrimaryColor },
+          { label: "Secondary Color", value: secondaryColor, set: setSecondaryColor },
+          { label: "Accent Color", value: accentColor, set: setAccentColor },
+          { label: "Text Color", value: textColor, set: setTextColor },
+          { label: "Bot Bubble Color", value: botBubbleColor, set: setBotBubbleColor },
+          { label: "Bubble Color", value: bubbleColor, set: setBubbleColor },
+        ].map(({ label, value, set }) => (
+          <LockedField key={label} plan={plan}>
+            <div className="form-group">
+              <label>{label}</label>
+              <input type="color" value={value} onChange={(e) => set(e.target.value)} />
+            </div>
+          </LockedField>
+        ))}
+      </div>
     </div>
-    <div className="form-group">
-      <label>Custom Logo URL (optional, leave blank for basic chat icon)</label>
-      <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://... " />
+
+    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <button className="btn btn-primary" onClick={saveSettings}>Save Settings</button>
+      {status && <span style={{ fontSize: 13, color: status.includes("✅") ? "#4ade80" : "#f87171" }}>{status}</span>}
     </div>
-  </div>
-  <div style={{ marginTop: 12 }}>
-    <label style={{ marginBottom: 8, display: "block" }}>Preview</label>
-    <div style={{
-      width: 56,
-      height: 56,
-      borderRadius: "50%",
-      background: bubbleLogoUrl ? "transparent" : bubbleColor,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-      border: "2px solid #1e1e2e"
-    }}>
-      {bubbleLogoUrl ? (
-        <img src={bubbleLogoUrl} alt="bubble" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      ) : (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>
-      )}
-    </div>
-  </div>
-</div>
-    </>
-  );
+  </>
+);
 
   const renderKnowledgeBase = () => (
     <>

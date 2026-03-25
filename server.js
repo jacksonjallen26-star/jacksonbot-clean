@@ -402,6 +402,18 @@ app.get("/api/pdfs", authenticateToken, async (req, res) => {
 app.post("/api/update-settings", authenticateToken, async (req, res) => {
   try {
     const companyId = req.companyId;
+
+    // Fetch company first to check plan
+    const company = await Company.findOne({ companyId });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    // If free plan, strip locked fields so they can't be changed
+    if (company.plan === "free") {
+      ["botName", "logoUrl", "openingMessage", "bubbleLogoUrl",
+       "primaryColor", "secondaryColor", "accentColor", "textColor",
+       "botBubbleColor", "bubbleColor"].forEach(f => delete req.body[f]);
+    }
+
     const {
       botName,
       logoUrl,
@@ -423,27 +435,30 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
     const sanitizedBubbleLogoUrl = sanitizeHtml(bubbleLogoUrl || "", { allowedTags: [], allowedAttributes: {} });
 
     const updatedCompany = await Company.findOneAndUpdate(
-        { companyId },
-        {
+      { companyId },
+      {
+        ...(company.plan !== "free" && {
           botName: sanitizedBotName,
           logoUrl: sanitizedLogoUrl,
           primaryColor,
           secondaryColor,
           accentColor,
           textColor,
-         botBubbleColor,
-         systemPrompt: sanitizedSystemPrompt,
-         openingMessage: sanitizedOpeningMessage,
-         bubbleLogoUrl: sanitizedBubbleLogoUrl,
-         bubbleColor: bubbleColor || "#7c3aed",
+          botBubbleColor,
+          openingMessage: sanitizedOpeningMessage,
+          bubbleLogoUrl: sanitizedBubbleLogoUrl,
+          bubbleColor: bubbleColor || "#7c3aed",
+        }),
+        systemPrompt: sanitizedSystemPrompt,
       },
       { new: true }
-);
+    );
+
     if (!updatedCompany)
       return res.status(404).json({ error: "Company not found" });
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       settings: {
         botName: updatedCompany.botName,
         logoUrl: updatedCompany.logoUrl,
@@ -456,15 +471,14 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
         openingMessage: updatedCompany.openingMessage,
         bubbleLogoUrl: updatedCompany.bubbleLogoUrl,
         bubbleColor: updatedCompany.bubbleColor
-     }
-});
+      }
+    });
 
   } catch (err) {
     console.error("Update Settings Error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 // ===============================
 // GET COMPANY SETTINGS (Widget)
 // ===============================
