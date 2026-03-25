@@ -1084,6 +1084,40 @@ const renderAdmin = () => (
       </div>
     </div>
 
+    {/* Embed Code */}
+<div className="card">
+  <div className="card-header">
+    <div className="card-title"><div className="card-dot" style={{ background: "#a78bfa" }}></div>Embed Code</div>
+  </div>
+  <div style={{ fontSize: 13, color: "#555577", marginBottom: 12 }}>
+    Paste this into your website's HTML before the closing <code style={{ color: "#a78bfa", background: "#1e1a3a", padding: "1px 6px", borderRadius: 4 }}>&lt;/body&gt;</code> tag.
+  </div>
+  <div style={{
+    background: "#0a0a0f",
+    border: "1px solid #1e1e2e",
+    borderRadius: 8,
+    padding: "16px",
+    fontFamily: "monospace",
+    fontSize: 12,
+    color: "#a78bfa",
+    lineHeight: 1.6,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-all",
+    marginBottom: 12
+  }}>
+    {`<script>\n  window.AskraConfig = { companyId: "${companyId}" };\n</script>\n<script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`}
+  </div>
+  <button
+    className="btn btn-ghost"
+    onClick={() => {
+      navigator.clipboard.writeText(`<script>\n  window.AskraConfig = { companyId: "${companyId}" };\n</script>\n<script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`);
+    }}
+    style={{ fontSize: 12 }}
+  >
+    Copy Embed Code
+  </button>
+</div>
+
     <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
       <button className="btn btn-primary" onClick={saveSettings}>Save Settings</button>
       {status && <span style={{ fontSize: 13, color: status.includes("✅") ? "#4ade80" : "#f87171" }}>{status}</span>}
