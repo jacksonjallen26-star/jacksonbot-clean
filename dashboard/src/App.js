@@ -715,6 +715,30 @@ const deletePdf = async (uploadId) => {
 
 
   // =============================
+// upgrade plan
+// =============================
+
+  const handleUpgrade = async (newPlan) => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/create-checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ plan: newPlan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = data.url;
+    }
+  } catch (err) {
+    console.error("Upgrade error:", err);
+  }
+};
+
+
+  // =============================
 // Admin Page
 // =============================
 
@@ -1165,6 +1189,61 @@ const renderAdmin = () => (
   );
   };
 
+  // =============================
+  // Upgrade Page
+  // =============================
+  const renderUpgrade = () => (
+    <>
+      <div className="page-header">
+        <div className="page-title">Upgrade Plan</div>
+        <div className="page-subtitle">Unlock more features and higher limits</div>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <div className="card" style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ fontSize: 13, color: "#a78bfa", fontWeight: 700, marginBottom: 4 }}>Starter</div>
+          <div style={{ fontSize: 28, color: "#c4c4d4", fontWeight: 700, marginBottom: 12 }}>$29<span style={{ fontSize: 13, color: "#555577" }}>/mo</span></div>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+            {["5,000 messages/mo", "10 PDF uploads", "Full customization", "Conversation history"].map(f => (
+              <li key={f} style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ color: "#4ade80" }}>✓</span> {f}
+              </li>
+            ))}
+          </ul>
+          <button
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center" }}
+            onClick={() => handleUpgrade("starter")}
+            disabled={plan === "starter" || plan === "pro"}
+          >
+            {plan === "starter" ? "Current Plan" : plan === "pro" ? "Already on higher plan" : "Upgrade to Starter"}
+          </button>
+        </div>
+
+        <div className="card" style={{ flex: 1, minWidth: 220, border: "1px solid #7c3aed44" }}>
+          <div style={{ fontSize: 13, color: "#a78bfa", fontWeight: 700, marginBottom: 4 }}>Pro</div>
+          <div style={{ fontSize: 28, color: "#c4c4d4", fontWeight: 700, marginBottom: 12 }}>$79<span style={{ fontSize: 13, color: "#555577" }}>/mo</span></div>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+            {["50,000 messages/mo", "75 PDF uploads", "Full customization", "Conversation history", "Priority support", "Early access to features"].map(f => (
+              <li key={f} style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ color: "#4ade80" }}>✓</span> {f}
+              </li>
+            ))}
+          </ul>
+          <button
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center" }}
+            onClick={() => handleUpgrade("pro")}
+            disabled={plan === "pro"}
+          >
+            {plan === "pro" ? "Current Plan" : "Upgrade to Pro"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+
   return (
     <div className="layout">
       <div className="sidebar">
@@ -1181,6 +1260,7 @@ const renderAdmin = () => (
             { id: "settings", label: "Bot Settings" },
             { id: "conversations", label: "Conversations" },
             { id: "knowledge", label: "Knowledge Base" },
+            { id: "upgrade", label: "⚡ Upgrade" },
             ...(isAdmin ? [{ id: "admin", label: "Admin" }] : [])
           ].map(item => (
             <button
@@ -1212,6 +1292,7 @@ const renderAdmin = () => (
         {activePage === "settings" && renderSettings()}
         {activePage === "knowledge" && renderKnowledgeBase()}
         {activePage === "conversations" && renderConversations()}
+        {activePage === "upgrade" && renderUpgrade()}
         {activePage === "admin" && isAdmin && renderAdmin()}
       </div>
     </div>

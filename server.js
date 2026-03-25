@@ -753,8 +753,8 @@ app.post("/api/create-checkout", authenticateToken, async (req, res) => {
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `https://app.askra.app/onboarding?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://app.askra.app/register?plan=${plan}`,
+      success_url: `https://app.askra.app/dashboard?upgraded=true`,
+      cancel_url: `https://app.askra.app/dashboard`,
       metadata: { companyId }
     });
 
