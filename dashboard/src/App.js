@@ -1137,7 +1137,7 @@ const renderAdmin = () => (
           <span style={{ fontSize: 32 }}>🔒</span>
           <div style={{ fontSize: 16, color: "#c4c4d4", fontWeight: 600 }}>Conversation history is a paid feature</div>
           <div style={{ fontSize: 13, color: "#555577", maxWidth: 320 }}>Upgrade to Starter or Pro to view and browse all conversations your bot has had.</div>
-          <a href="/register?plan=starter" className="btn btn-primary" style={{ marginTop: 8 }}>Upgrade Now</a>
+          <button className="btn btn-primary" style={{ marginTop: 8 }} onClick={() => setActivePage("upgrade")}>Upgrade Now</button>
         </div>
       </>
     );
