@@ -78,6 +78,7 @@ const companySchema = new mongoose.Schema({
   botBubbleColor: { type: String, default: "#2a2a2a" },
   bubbleLogoUrl: { type: String, default: "https://app.askra.app/logo.png" },
   bubbleColor: { type: String, default: "#7c3aed" },
+  openingMessage: { type: String, default: "" },
 
   // AI Personality
   systemPrompt: {
