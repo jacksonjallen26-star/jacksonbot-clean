@@ -1101,7 +1101,25 @@ const renderAdmin = () => (
     </>
   );
 
-  const renderConversations = () => (
+  const renderConversations = () => {
+  if (plan === "free") {
+    return (
+      <>
+        <div className="page-header">
+          <div className="page-title">Conversations</div>
+          <div className="page-subtitle">Browse all conversations from your bot</div>
+        </div>
+        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 20px", textAlign: "center", gap: 12 }}>
+          <span style={{ fontSize: 32 }}>🔒</span>
+          <div style={{ fontSize: 16, color: "#c4c4d4", fontWeight: 600 }}>Conversation history is a paid feature</div>
+          <div style={{ fontSize: 13, color: "#555577", maxWidth: 320 }}>Upgrade to Starter or Pro to view and browse all conversations your bot has had.</div>
+          <a href="/register?plan=starter" className="btn btn-primary" style={{ marginTop: 8 }}>Upgrade Now</a>
+        </div>
+      </>
+    );
+  }
+
+  return (
     <>
       <div className="page-header">
         <div className="page-title">Conversations</div>
@@ -1145,6 +1163,7 @@ const renderAdmin = () => (
       </div>
     </>
   );
+  };
 
   return (
     <div className="layout">

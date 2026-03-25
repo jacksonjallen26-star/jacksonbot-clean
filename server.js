@@ -648,6 +648,12 @@ app.get("/api/conversations", authenticateToken, async (req, res) => {
   try {
     const companyId = req.companyId;
 
+    // Block free plan
+    const company = await Company.findOne({ companyId });
+    if (company?.plan === "free") {
+      return res.status(403).json({ error: "Upgrade required to view conversations." });
+    }
+
     const messages = await Chat.find({ companyId })
       .sort({ timestamp: 1 });
 
