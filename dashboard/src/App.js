@@ -631,7 +631,7 @@ function OnboardingPage() {
   );
 }
 
-function LockedField({ children, plan }) {
+function LockedField({ children, plan, onUpgrade }) {
   const isLocked = plan === "free";
 
   if (!isLocked) return children;
@@ -648,7 +648,7 @@ function LockedField({ children, plan }) {
           gap: 6, cursor: "pointer", borderRadius: 6,
           background: "rgba(10,10,20,0.5)",
         }}
-        onClick={() => window.location.href = "/dashboard?upgrade=true"}
+        onClick={onUpgrade}
       >
         <span style={{ fontSize: 13 }}>🔒</span>
         <span style={{ fontSize: 12, color: "#a78bfa", fontWeight: 600 }}>
@@ -658,6 +658,7 @@ function LockedField({ children, plan }) {
     </div>
   );
 }
+
 
 
 // =============================
@@ -1163,7 +1164,8 @@ const renderAdmin = () => (
     </>
   );
 };
-  const renderSettings = () => (
+  
+const renderSettings = () => (
   <>
     <div className="page-header">
       <div className="page-title">Bot Settings</div>
@@ -1194,86 +1196,91 @@ const renderAdmin = () => (
           <input type="text" value={openingMessage} onChange={(e) => setOpeningMessage(e.target.value)} placeholder="Hi! How can I help you today?" />
         </div>
       </LockedField>
-      <LockedField plan={plan}>
-        <div className="form-group full">
-          <label>Bubble Logo URL</label>
-          <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://..." />
-        </div>
-      </LockedField>
     </div>
 
-    {/* System Prompt — always unlocked */}
     <div className="card">
       <div className="card-header">
-        <div className="card-title"><div className="card-dot"></div>Behavior</div>
+        <div className="card-title"><div className="card-dot" style={{ background: "#06b6d4" }}></div>AI Behavior</div>
       </div>
-      <div className="form-group full">
+      <div className="form-group">
         <label>System Prompt</label>
-        <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={5} />
+        <textarea
+          rows={5}
+          value={systemPrompt}
+          onChange={(e) => setSystemPrompt(e.target.value)}
+          placeholder="You are a helpful assistant for this business..."
+        />
       </div>
     </div>
 
-    {/* Colors — all locked for free */}
     <div className="card">
       <div className="card-header">
-        <div className="card-title"><div className="card-dot"></div>Appearance</div>
+        <div className="card-title"><div className="card-dot" style={{ background: "#f59e0b" }}></div>Brand Colors</div>
+      </div>
+      <div className="color-row">
+        <LockedField plan={plan}>
+          <div className="color-group"><label>Primary</label><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} /></div>
+        </LockedField>
+        <LockedField plan={plan}>
+          <div className="color-group"><label>Secondary</label><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} /></div>
+        </LockedField>
+        <LockedField plan={plan}>
+          <div className="color-group"><label>Accent</label><input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} /></div>
+        </LockedField>
+        <LockedField plan={plan}>
+          <div className="color-group"><label>Text</label><input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} /></div>
+        </LockedField>
+        <LockedField plan={plan}>
+          <div className="color-group"><label>Bubble</label><input type="color" value={botBubbleColor} onChange={(e) => setBotBubbleColor(e.target.value)} /></div>
+        </LockedField>
+      </div>
+      <div className="btn-row">
+        {status && <div className={status.includes("✅") ? "status-text" : "error-text"}>{status}</div>}
+        {!status && <div></div>}
+        <button className="btn btn-primary" onClick={saveSettings}>Save Changes</button>
+      </div>
+    </div>
+
+    <div className="card">
+      <div className="card-header">
+        <div className="card-title"><div className="card-dot" style={{ background: "#ec4899" }}></div>Chat Bubble</div>
       </div>
       <div className="form-row">
-        {[
-          { label: "Primary Color", value: primaryColor, set: setPrimaryColor },
-          { label: "Secondary Color", value: secondaryColor, set: setSecondaryColor },
-          { label: "Accent Color", value: accentColor, set: setAccentColor },
-          { label: "Text Color", value: textColor, set: setTextColor },
-          { label: "Bot Bubble Color", value: botBubbleColor, set: setBotBubbleColor },
-          { label: "Bubble Color", value: bubbleColor, set: setBubbleColor },
-        ].map(({ label, value, set }) => (
-          <LockedField key={label} plan={plan}>
-            <div className="form-group">
-              <label>{label}</label>
-              <input type="color" value={value} onChange={(e) => set(e.target.value)} />
-            </div>
-          </LockedField>
-        ))}
+        <LockedField plan={plan}>
+          <div className="form-group">
+            <label>Bubble Color</label>
+            <input type="color" value={bubbleColor} onChange={(e) => setBubbleColor(e.target.value)} />
+          </div>
+        </LockedField>
+        <LockedField plan={plan}>
+          <div className="form-group">
+            <label>Custom Logo URL (optional, leave blank for basic chat icon)</label>
+            <input type="url" value={bubbleLogoUrl} onChange={(e) => setBubbleLogoUrl(e.target.value)} placeholder="https://..." />
+          </div>
+        </LockedField>
       </div>
-    </div>
-
-    {/* Embed Code */}
-<div className="card">
-  <div className="card-header">
-    <div className="card-title"><div className="card-dot" style={{ background: "#a78bfa" }}></div>Embed Code</div>
-  </div>
-  <div style={{ fontSize: 13, color: "#555577", marginBottom: 12 }}>
-    Paste this into your website's HTML before the closing <code style={{ color: "#a78bfa", background: "#1e1a3a", padding: "1px 6px", borderRadius: 4 }}>&lt;/body&gt;</code> tag.
-  </div>
-  <div style={{
-    background: "#0a0a0f",
-    border: "1px solid #1e1e2e",
-    borderRadius: 8,
-    padding: "16px",
-    fontFamily: "monospace",
-    fontSize: 12,
-    color: "#a78bfa",
-    lineHeight: 1.6,
-    whiteSpace: "pre-wrap",
-    wordBreak: "break-all",
-    marginBottom: 12
-  }}>
-    {`<script>\n  window.AskraConfig = { companyId: "${companyId}" };\n</script>\n<script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`}
-  </div>
-  <button
-    className="btn btn-ghost"
-    onClick={() => {
-      navigator.clipboard.writeText(`<script>\n  window.AskraConfig = { companyId: "${companyId}" };\n</script>\n<script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`);
-    }}
-    style={{ fontSize: 12 }}
-  >
-    Copy Embed Code
-  </button>
-</div>
-
-    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-      <button className="btn btn-primary" onClick={saveSettings}>Save Settings</button>
-      {status && <span style={{ fontSize: 13, color: status.includes("✅") ? "#4ade80" : "#f87171" }}>{status}</span>}
+      <div style={{ marginTop: 12 }}>
+        <label style={{ marginBottom: 8, display: "block" }}>Preview</label>
+        <div style={{
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: bubbleLogoUrl ? "transparent" : bubbleColor,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+          border: "2px solid #1e1e2e"
+        }}>
+          {bubbleLogoUrl ? (
+            <img src={bubbleLogoUrl} alt="bubble" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+          )}
+        </div>
+      </div>
     </div>
   </>
 );
