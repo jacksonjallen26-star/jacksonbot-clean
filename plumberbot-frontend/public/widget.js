@@ -131,10 +131,10 @@
   fetch(`${BACKEND_URL}/api/get-settings?companyId=${companyId}`)
     .then(function (res) { return res.json(); })
     .then(function (data) {
-      // Apply bubble color
       if (data.bubbleColor) {
-        bubble.style.background = data.bubbleColor;
-      }
+  bubble.style.background = data.bubbleColor;
+  bubble.style.boxShadow = `0 4px 24px ${data.bubbleColor}66`;
+}
 
       // Apply bubble logo or default
       if (data.bubbleLogoUrl) {
@@ -188,6 +188,7 @@
           }
           if (data.bubbleColor) {
             bubble.style.background = data.bubbleColor;
+            bubble.style.boxShadow = `0 4px 24px ${data.bubbleColor}66`;
           }
         })
         .catch(setChatIcon);
