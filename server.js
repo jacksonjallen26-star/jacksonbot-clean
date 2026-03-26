@@ -88,7 +88,7 @@ const companySchema = new mongoose.Schema({
 
   // SaaS Controls
   active: { type: Boolean, default: true },
-  plan: { type: String, default: "starter" },
+  plan: { type: String, default: "free" },
   role: { type: String, default: "user" },
 
 
