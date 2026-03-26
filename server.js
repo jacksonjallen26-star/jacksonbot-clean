@@ -12,6 +12,9 @@ const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { Pinecone } = require("@pinecone-database/pinecone");
 const PDFParser = require("pdf2json");
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
+const crypto = require("crypto");
 const multer = require("multer");
 require("dotenv").config();
 
@@ -79,6 +82,8 @@ const companySchema = new mongoose.Schema({
   bubbleLogoUrl: { type: String, default: "https://app.askra.app/logo.png" },
   bubbleColor: { type: String, default: "#7c3aed" },
   openingMessage: { type: String, default: "" },
+  passwordResetToken: { type: String, default: null },
+  passwordResetExpiry: { type: Date, default: null },
 
   // AI Personality
   systemPrompt: {
@@ -209,6 +214,31 @@ app.post("/api/register", async (req, res) => {
       plan: plan || "free"
     });
 
+    // Send welcome email
+await resend.emails.send({
+  from: "Askra <noreply@askra.app>",
+  to: email,
+  subject: "Welcome to Askra 🎉",
+  html: `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #7c3aed;">Welcome to Askra, ${name}!</h2>
+      <p>Your account is set up and your bot is ready to go.</p>
+      <p>Here's what to do next:</p>
+      <ol>
+        <li style="margin-bottom: 8px;">Upload a PDF with information about your business</li>
+        <li style="margin-bottom: 8px;">Set your system prompt to describe how your bot should behave</li>
+        <li style="margin-bottom: 8px;">Copy your embed code and paste it on your website</li>
+      </ol>
+      <a href="https://app.askra.app/dashboard" 
+         style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">
+        Go to Dashboard
+      </a>
+      <p style="color: #888; font-size: 13px;">Your Company ID: ${companyId}</p>
+      <p style="color: #888; font-size: 13px;">Questions? Reply to this email and we'll help you out.</p>
+    </div>
+  `
+});
+
     const token = jwt.sign(
       { companyId: company.companyId, role: company.role },
       process.env.JWT_SECRET,
@@ -251,6 +281,92 @@ app.post("/api/login", async (req, res) => {
 
   } catch (err) {
     console.error("Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// FORGOT PASSWORD
+// ===============================
+app.post("/api/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email)
+      return res.status(400).json({ error: "Email required" });
+
+    const company = await Company.findOne({ email });
+
+    // Always return success even if email not found (security)
+    if (!company)
+      return res.json({ success: true });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+    await Company.findOneAndUpdate({ email }, {
+      passwordResetToken: token,
+      passwordResetExpiry: expiry
+    });
+
+    await resend.emails.send({
+      from: "Askra <noreply@askra.app>",
+      to: email,
+      subject: "Reset your Askra password",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">Reset your password</h2>
+          <p>We received a request to reset your Askra password. Click the button below to choose a new one.</p>
+          <a href="https://app.askra.app/reset-password?token=${token}" 
+             style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">
+            Reset Password
+          </a>
+          <p style="color: #888; font-size: 13px;">This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
+// RESET PASSWORD
+// ===============================
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password)
+      return res.status(400).json({ error: "Token and password required" });
+
+    if (password.length < 8)
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+    const company = await Company.findOne({
+      passwordResetToken: token,
+      passwordResetExpiry: { $gt: new Date() }
+    });
+
+    if (!company)
+      return res.status(400).json({ error: "Invalid or expired reset link" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await Company.findOneAndUpdate({ _id: company._id }, {
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpiry: null
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Reset password error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
