@@ -34,7 +34,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
       transition: transform 0.2s, box-shadow 0.2s;
       border: none;
       padding: 0;
