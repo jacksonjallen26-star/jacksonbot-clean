@@ -334,36 +334,17 @@ function RegisterPage() {
       return;
     }
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("companyId", data.companyId);
-    localStorage.setItem("role", data.role);
-
-    // Free plan goes straight to onboarding
-    if (selectedPlan === "free") {
-      navigate("/onboarding");
+    // Paid plan — redirect to Stripe, no token yet
+    if (data.checkout) {
+      window.location.href = data.url;
       return;
     }
 
-    // Paid plans go to Stripe checkout
-    console.log("Plan is:", selectedPlan);
-    console.log("Token is:", data.token);
-    const checkoutRes = await fetch(`${BACKEND_URL}/api/create-checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${data.token}`
-      },
-      body: JSON.stringify({ plan: selectedPlan })
-    });
-
-    const checkoutData = await checkoutRes.json();
-
-    if (checkoutData.success) {
-      window.location.href = checkoutData.url;
-    } else {
-      setError("Failed to create checkout session");
-      setLoading(false);
-    }
+    // Free plan — account created, store token and go to onboarding
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("companyId", data.companyId);
+    localStorage.setItem("role", data.role);
+    navigate("/onboarding");
 
   } catch (err) {
     setError("Something went wrong");
@@ -720,6 +701,74 @@ function LockedField({ children, plan, onUpgrade }) {
         <span style={{ fontSize: 12, color: "#a78bfa", fontWeight: 600 }}>
           Upgrade to unlock
         </span>
+      </div>
+    </div>
+  );
+}
+
+// =============================
+// Paid Success Page
+// =============================
+function PaidSuccessPage() {
+  const [status, setStatus] = useState("loading");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+
+    if (!sessionId) {
+      setStatus("error");
+      return;
+    }
+
+    const exchangeToken = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/paid-success?session_id=${sessionId}`);
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("companyId", data.companyId);
+          localStorage.setItem("role", data.role);
+          setStatus("success");
+          setTimeout(() => navigate("/onboarding"), 1500);
+        } else {
+          setStatus("error");
+        }
+      } catch (err) {
+        setStatus("error");
+      }
+    };
+
+    exchangeToken();
+  }, [navigate]);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#0f0f17", border: "1px solid #1e1e2e", borderRadius: 12, padding: "40px 36px", width: "100%", maxWidth: 400, textAlign: "center" }}>
+        {status === "loading" && (
+          <>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Setting up your account...</div>
+            <div style={{ fontSize: 13, color: "#555577" }}>Just a moment while we confirm your payment.</div>
+          </>
+        )}
+        {status === "success" && (
+          <>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>🎉</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Payment successful!</div>
+            <div style={{ fontSize: 13, color: "#555577" }}>Redirecting you to onboarding...</div>
+          </>
+        )}
+        {status === "error" && (
+          <>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>❌</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Something went wrong</div>
+            <div style={{ fontSize: 13, color: "#555577", marginBottom: 20 }}>Your payment went through but we had trouble setting up your account. Please contact support.</div>
+            <a href="mailto:jacksonjallen26@gmail.com" className="btn btn-primary" style={{ justifyContent: "center" }}>Contact Support</a>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1772,6 +1821,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/paid-success" element={<PaidSuccessPage />} />
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route
           path="/dashboard"

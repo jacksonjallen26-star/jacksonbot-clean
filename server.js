@@ -221,53 +221,76 @@ app.post("/api/register", async (req, res) => {
     if (existing)
       return res.status(400).json({ error: "Email already registered" });
 
-    // Auto generate companyId from business name
+    // Free plan — create account immediately as before
+    if (!plan || plan === "free") {
+      const baseId = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      const suffix = Math.random().toString(36).slice(2, 7);
+      const companyId = `${baseId}-${suffix}`;
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const company = await Company.create({
+        name,
+        companyId,
+        email,
+        password: hashedPassword,
+        plan: "free"
+      });
+
+      await resend.emails.send({
+        from: "Askra <noreply@askra.app>",
+        to: email,
+        subject: "Welcome to Askra 🎉",
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">Welcome to Askra, ${name}!</h2>
+            <p>Your account is set up and your bot is ready to go.</p>
+            <ol>
+              <li style="margin-bottom: 8px;">Upload a PDF with information about your business</li>
+              <li style="margin-bottom: 8px;">Set your system prompt to describe how your bot should behave</li>
+              <li style="margin-bottom: 8px;">Copy your embed code and paste it on your website</li>
+            </ol>
+            <a href="https://app.askra.app/dashboard" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">Go to Dashboard</a>
+            <p style="color: #888; font-size: 13px;">Your Company ID: ${companyId}</p>
+          </div>
+        `
+      });
+
+      const token = jwt.sign(
+        { companyId: company.companyId, role: company.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({ success: true, token, companyId: company.companyId, role: company.role });
+    }
+
+    // Paid plan — send to Stripe first, create account in webhook
+    const hashedPassword = await bcrypt.hash(password, 10);
     const baseId = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     const suffix = Math.random().toString(36).slice(2, 7);
     const companyId = `${baseId}-${suffix}`;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const priceId = plan === "starter"
+      ? process.env.STRIPE_STARTER_PRICE
+      : process.env.STRIPE_PRO_PRICE;
 
-    const company = await Company.create({
-      name,
-      companyId,
-      email,
-      password: hashedPassword,
-      plan: plan || "free"
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "subscription",
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `https://app.askra.app/paid-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://app.askra.app/register?plan=${plan}`,
+      customer_email: email,
+      metadata: {
+        name,
+        email,
+        hashedPassword,
+        companyId,
+        plan
+      }
     });
 
-    // Send welcome email
-await resend.emails.send({
-  from: "Askra <noreply@askra.app>",
-  to: email,
-  subject: "Welcome to Askra 🎉",
-  html: `
-    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #7c3aed;">Welcome to Askra, ${name}!</h2>
-      <p>Your account is set up and your bot is ready to go.</p>
-      <p>Here's what to do next:</p>
-      <ol>
-        <li style="margin-bottom: 8px;">Upload a PDF with information about your business</li>
-        <li style="margin-bottom: 8px;">Set your system prompt to describe how your bot should behave</li>
-        <li style="margin-bottom: 8px;">Copy your embed code and paste it on your website</li>
-      </ol>
-      <a href="https://app.askra.app/dashboard" 
-         style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">
-        Go to Dashboard
-      </a>
-      <p style="color: #888; font-size: 13px;">Your Company ID: ${companyId}</p>
-      <p style="color: #888; font-size: 13px;">Questions? Reply to this email and we'll help you out.</p>
-    </div>
-  `
-});
-
-    const token = jwt.sign(
-      { companyId: company.companyId, role: company.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({ success: true, token, companyId: company.companyId, role: company.role });
+    res.json({ success: true, checkout: true, url: session.url });
 
   } catch (err) {
     console.error("Register error:", err);
@@ -952,6 +975,38 @@ app.post("/api/billing-portal", authenticateToken, async (req, res) => {
 });
 
 // ===============================
+// PAID SUCCESS — exchange session for token
+// ===============================
+app.get("/api/paid-success", async (req, res) => {
+  try {
+    const { session_id } = req.query;
+
+    if (!session_id)
+      return res.status(400).json({ error: "Missing session_id" });
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    const companyId = session.metadata.companyId;
+
+    const company = await Company.findOne({ companyId });
+
+    if (!company)
+      return res.status(404).json({ error: "Account not found yet" });
+
+    const token = jwt.sign(
+      { companyId: company.companyId, role: company.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, companyId: company.companyId, role: company.role });
+
+  } catch (err) {
+    console.error("Paid success error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===============================
 // STRIPE WEBHOOK
 // ===============================
 app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, res) => {
@@ -967,17 +1022,64 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const companyId = session.metadata.companyId;
+    const { name, email, hashedPassword, companyId, plan } = session.metadata;
 
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const priceId = lineItems.data[0].price.id;
 
-    let plan = "free";
-    if (priceId === process.env.STRIPE_STARTER_PRICE) plan = "starter";
-    if (priceId === process.env.STRIPE_PRO_PRICE) plan = "pro";
+    let finalPlan = "free";
+    if (priceId === process.env.STRIPE_STARTER_PRICE) finalPlan = "starter";
+    if (priceId === process.env.STRIPE_PRO_PRICE) finalPlan = "pro";
 
-    await Company.findOneAndUpdate({ companyId }, { plan, stripeCustomerId: session.customer });
-    console.log(`✅ Plan updated to ${plan} for ${companyId}`);
+    // Create the account now that payment succeeded
+    await Company.create({
+      name,
+      companyId,
+      email,
+      password: hashedPassword,
+      plan: finalPlan,
+      stripeCustomerId: session.customer
+    });
+
+    // Send welcome email now that payment is confirmed
+    await resend.emails.send({
+      from: "Askra <noreply@askra.app>",
+      to: email,
+      subject: "Welcome to Askra 🎉",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">Welcome to Askra, ${name}!</h2>
+          <p>Your payment was successful and your account is ready to go.</p>
+          <ol>
+            <li style="margin-bottom: 8px;">Upload a PDF with information about your business</li>
+            <li style="margin-bottom: 8px;">Set your system prompt to describe how your bot should behave</li>
+            <li style="margin-bottom: 8px;">Copy your embed code and paste it on your website</li>
+          </ol>
+          <a href="https://app.askra.app/dashboard" style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">Go to Dashboard</a>
+          <p style="color: #888; font-size: 13px;">Your Company ID: ${companyId}</p>
+        </div>
+      `
+    });
+
+    console.log(`✅ Account created and welcome email sent for ${email}`);
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object;
+    const company = await Company.findOne({ stripeCustomerId: subscription.customer });
+    if (company) {
+      await Company.findOneAndUpdate({ stripeCustomerId: subscription.customer }, { plan: "free" });
+      console.log(`⬇️ Plan downgraded to free for ${company.email}`);
+    }
+  }
+
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object;
+    const company = await Company.findOne({ stripeCustomerId: invoice.customer });
+    if (company) {
+      await Company.findOneAndUpdate({ stripeCustomerId: invoice.customer }, { plan: "free" });
+      console.log(`⬇️ Payment failed, plan downgraded to free for ${company.email}`);
+    }
   }
 
   res.json({ received: true });
