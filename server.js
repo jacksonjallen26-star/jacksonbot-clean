@@ -1021,17 +1021,27 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
   }
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const { name, email, hashedPassword, companyId, plan } = session.metadata;
+  const session = event.data.object;
+  const { name, email, hashedPassword, companyId, plan } = session.metadata;
 
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const priceId = lineItems.data[0].price.id;
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+  const priceId = lineItems.data[0].price.id;
 
-    let finalPlan = "free";
-    if (priceId === process.env.STRIPE_STARTER_PRICE) finalPlan = "starter";
-    if (priceId === process.env.STRIPE_PRO_PRICE) finalPlan = "pro";
+  let finalPlan = "free";
+  if (priceId === process.env.STRIPE_STARTER_PRICE) finalPlan = "starter";
+  if (priceId === process.env.STRIPE_PRO_PRICE) finalPlan = "pro";
 
-    // Create the account now that payment succeeded
+  const existingCompany = await Company.findOne({ companyId });
+
+  if (existingCompany) {
+    // Existing user upgrading — just update plan and stripeCustomerId
+    await Company.findOneAndUpdate({ companyId }, {
+      plan: finalPlan,
+      stripeCustomerId: session.customer
+    });
+    console.log(`✅ Plan upgraded to ${finalPlan} for ${companyId}`);
+  } else {
+    // New registration — create account
     await Company.create({
       name,
       companyId,
@@ -1041,7 +1051,6 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
       stripeCustomerId: session.customer
     });
 
-    // Send welcome email now that payment is confirmed
     await resend.emails.send({
       from: "Askra <noreply@askra.app>",
       to: email,
@@ -1063,6 +1072,7 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
 
     console.log(`✅ Account created and welcome email sent for ${email}`);
   }
+}
 
   if (event.type === "customer.subscription.deleted") {
     const subscription = event.data.object;
