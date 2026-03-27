@@ -36,15 +36,35 @@ app.use("/api/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "10kb" }));
 
 app.use(cors({
-  origin: [
-    "https://jacksonbot-clean.vercel.app",
-    "https://jacksonbot-dashboard.vercel.app",
-    "https://askra.app",
-    "https://www.askra.app",
-    "https://app.askra.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:5500"
-     ],
+  origin: async function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Always allow your own domains
+    const alwaysAllowed = [
+      "https://jacksonbot-clean.vercel.app",
+      "https://jacksonbot-dashboard.vercel.app",
+      "https://askra.app",
+      "https://www.askra.app",
+      "https://app.askra.app",
+      "http://localhost:3000",
+      "http://127.0.0.1:5500"
+    ];
+
+    if (alwaysAllowed.includes(origin)) return callback(null, true);
+
+    // Check if origin matches any registered company's website
+    try {
+      const company = await Company.findOne({ websiteUrl: origin });
+      if (company) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    } catch (err) {
+      callback(new Error("CORS lookup failed"));
+    }
+  },
   methods: ["GET", "POST", "DELETE"],
 }));
 
@@ -69,6 +89,7 @@ const companySchema = new mongoose.Schema({
   companyId: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password : { type: String, required: true },
+  websiteUrl: { type: String, default: "" },
 
   // Branding / Theme
   botName: { type: String, default: "Askra" },
@@ -541,7 +562,8 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
       systemPrompt,
       openingMessage,
       bubbleLogoUrl,
-      bubbleColor
+      bubbleColor,
+      websiteUrl
     } = req.body;
 
     const sanitizedBotName = sanitizeHtml(botName || "", { allowedTags: [], allowedAttributes: {} });
@@ -566,6 +588,7 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
           bubbleColor: bubbleColor || "#7c3aed",
         }),
         systemPrompt: sanitizedSystemPrompt,
+        websiteUrl: websiteUrl || "",
       },
       { new: true }
     );
@@ -586,7 +609,8 @@ app.post("/api/update-settings", authenticateToken, async (req, res) => {
         systemPrompt: updatedCompany.systemPrompt,
         openingMessage: updatedCompany.openingMessage,
         bubbleLogoUrl: updatedCompany.bubbleLogoUrl,
-        bubbleColor: updatedCompany.bubbleColor
+        bubbleColor: updatedCompany.bubbleColor,
+        websiteUrl: updatedCompany.websiteUrl
       }
     });
 
@@ -622,9 +646,8 @@ app.get("/api/get-settings", async (req, res) => {
       openingMessage: company.openingMessage,
       bubbleLogoUrl: company.bubbleLogoUrl,
       bubbleColor: company.bubbleColor,
-      plan: company.plan
-
-      
+      plan: company.plan,
+      websiteUrl: company.websiteUrl
     });
 
   } catch (err) {

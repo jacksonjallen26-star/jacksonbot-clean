@@ -541,9 +541,6 @@ onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
 }
 
 
-// =============================
-// Onboarding Page
-// =============================
 function OnboardingPage() {
   const companyId = localStorage.getItem("companyId");
   const navigate = useNavigate();
@@ -554,11 +551,39 @@ function OnboardingPage() {
 <script src="https://jacksonbot-clean.vercel.app/widget.js"></script>`;
 
   const [copied, setCopied] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const handleCopy = () => {
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSaveUrl = async () => {
+    if (!websiteUrl) {
+      setError("Please enter your website URL");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/update-settings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ websiteUrl })
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setStep(2);
+    } catch (err) {
+      setError("Failed to save. Please try again.");
+    }
+    setSaving(false);
   };
 
   return (
@@ -578,54 +603,95 @@ function OnboardingPage() {
         width: "100%",
         maxWidth: 560
       }}>
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 22, fontWeight: 600, color: "#fff", marginBottom: 8, letterSpacing: -0.5 }}>
-            🎉 You're all set!
-          </div>
-          <div style={{ fontSize: 14, color: "#555577", lineHeight: 1.6 }}>
-            Your bot is ready. Paste the code below into your website's HTML before the closing <code style={{ color: "#a78bfa", background: "#1e1a3a", padding: "1px 6px", borderRadius: 4 }}>&lt;/body&gt;</code> tag.
-          </div>
-        </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Your Embed Code</div>
-          <div style={{
-            background: "#0a0a0f",
-            border: "1px solid #1e1e2e",
-            borderRadius: 8,
-            padding: "16px",
-            fontFamily: "monospace",
-            fontSize: 12,
-            color: "#a78bfa",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all"
-          }}>
-            {embedCode}
-          </div>
-        </div>
+        {step === 1 && (
+          <>
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 22, fontWeight: 600, color: "#fff", marginBottom: 8, letterSpacing: -0.5 }}>
+                👋 One quick thing
+              </div>
+              <div style={{ fontSize: 14, color: "#555577", lineHeight: 1.6 }}>
+                What website will you be adding the Askra widget to? This is used to securely authorize your bot.
+              </div>
+            </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            className="btn btn-primary"
-            onClick={handleCopy}
-            style={{ flex: 1, justifyContent: "center" }}
-          >
-            {copied ? "✅ Copied!" : "Copy Embed Code"}
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => navigate("/dashboard")}
-            style={{ flex: 1, justifyContent: "center" }}
-          >
-            Go to Dashboard
-          </button>
-        </div>
+            <div className="form-group" style={{ marginBottom: 16 }}>
+              <label>Your Website URL</label>
+              <input
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="https://yourbusiness.com"
+                onKeyPress={(e) => e.key === "Enter" && handleSaveUrl()}
+              />
+            </div>
 
-        <div style={{ marginTop: 20, padding: "14px 16px", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: "#555577", marginBottom: 4 }}>Your Company ID</div>
-          <div style={{ fontSize: 13, color: "#c4c4d4", fontFamily: "monospace" }}>{companyId}</div>
-        </div>
+            {error && <div style={{ fontSize: 13, color: "#f87171", marginBottom: 12 }}>{error}</div>}
+
+            <button
+              className="btn btn-primary"
+              onClick={handleSaveUrl}
+              disabled={saving}
+              style={{ width: "100%", justifyContent: "center", padding: "10px" }}
+            >
+              {saving ? "Saving..." : "Continue →"}
+            </button>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 22, fontWeight: 600, color: "#fff", marginBottom: 8, letterSpacing: -0.5 }}>
+                🎉 You're all set!
+              </div>
+              <div style={{ fontSize: 14, color: "#555577", lineHeight: 1.6 }}>
+                Your bot is ready. Paste the code below into your website's HTML before the closing <code style={{ color: "#a78bfa", background: "#1e1a3a", padding: "1px 6px", borderRadius: 4 }}>&lt;/body&gt;</code> tag.
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#555577", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Your Embed Code</div>
+              <div style={{
+                background: "#0a0a0f",
+                border: "1px solid #1e1e2e",
+                borderRadius: 8,
+                padding: "16px",
+                fontFamily: "monospace",
+                fontSize: 12,
+                color: "#a78bfa",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-all"
+              }}>
+                {embedCode}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className="btn btn-primary"
+                onClick={handleCopy}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                {copied ? "✅ Copied!" : "Copy Embed Code"}
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => navigate("/dashboard")}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                Go to Dashboard
+              </button>
+            </div>
+
+            <div style={{ marginTop: 20, padding: "14px 16px", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 8 }}>
+              <div style={{ fontSize: 12, color: "#555577", marginBottom: 4 }}>Your Company ID</div>
+              <div style={{ fontSize: 13, color: "#c4c4d4", fontFamily: "monospace" }}>{companyId}</div>
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   );
@@ -691,6 +757,7 @@ function DashboardPage() {
   const [pdfListStatus, setPdfListStatus] = useState("");
   const [plan, setPlan] = useState("free");
   const [monthlyMessages, setMonthlyMessages] = useState(0);
+  const [websiteUrl, setWebsiteUrl] = useState("");
 
 // =============================
   // Get companyId from localStorage
@@ -746,6 +813,7 @@ useEffect(() => {
         setBubbleLogoUrl(data.bubbleLogoUrl || "");
         setBubbleColor(data.bubbleColor || "#7c3aed");
         setPlan(data.plan || "free");
+        setWebsiteUrl(data.websiteUrl || "");
       } catch (err) {
         console.error("Error loading settings:", err);
       }
