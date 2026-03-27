@@ -453,7 +453,6 @@ onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
       <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> 10 PDF uploads</li>
       <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Full customization</li>
       <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Chat history</li>
-      <li style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#4ade80" }}>✓</span> Email support</li>
     </ul>
   )}
   {selectedPlan === "pro" && (
