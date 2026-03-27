@@ -105,6 +105,7 @@ const companySchema = new mongoose.Schema({
   openingMessage: { type: String, default: "" },
   passwordResetToken: { type: String, default: null },
   passwordResetExpiry: { type: Date, default: null },
+  stripeCustomerId: { type: String, default: null },
 
   // AI Personality
   systemPrompt: {
@@ -928,6 +929,29 @@ app.post("/api/create-checkout", authenticateToken, async (req, res) => {
 });
 
 // ===============================
+// BILLING PORTAL
+// ===============================
+app.post("/api/billing-portal", authenticateToken, async (req, res) => {
+  try {
+    const companyId = req.companyId;
+    const company = await Company.findOne({ companyId });
+
+    if (!company || !company.stripeCustomerId)
+      return res.status(400).json({ error: "No billing account found" });
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: company.stripeCustomerId,
+      return_url: "https://app.askra.app/dashboard",
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Billing portal error:", err);
+    res.status(500).json({ error: "Failed to open billing portal" });
+  }
+});
+
+// ===============================
 // STRIPE WEBHOOK
 // ===============================
 app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, res) => {
@@ -952,7 +976,7 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
     if (priceId === process.env.STRIPE_STARTER_PRICE) plan = "starter";
     if (priceId === process.env.STRIPE_PRO_PRICE) plan = "pro";
 
-    await Company.findOneAndUpdate({ companyId }, { plan });
+    await Company.findOneAndUpdate({ companyId }, { plan, stripeCustomerId: session.customer });
     console.log(`✅ Plan updated to ${plan} for ${companyId}`);
   }
 
