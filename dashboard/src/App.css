@@ -487,8 +487,7 @@ input[type="color"]:hover { border-color: #7c3aed44; }
   border: 1px solid #1c1c2e;
   border-radius: 10px;
   overflow: hidden;
-  min-height: 380px;
-  max-height: 560px;
+  height: 560px;
 }
 
 .user-list {
@@ -496,6 +495,7 @@ input[type="color"]:hover { border-color: #7c3aed44; }
   border-right: 1px solid #1c1c2e;
   padding: 10px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .user-list-title {
@@ -563,6 +563,7 @@ input[type="color"]:hover { border-color: #7c3aed44; }
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .msg-bubble {

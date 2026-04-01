@@ -1248,11 +1248,6 @@ const renderSettings = () => (
           <div className="color-group"><label>Bubble</label><input type="color" value={botBubbleColor} onChange={(e) => setBotBubbleColor(e.target.value)} /></div>
         </LockedField>
       </div>
-      <div className="btn-row">
-        {status && <div className={status.includes("✅") ? "status-text" : "error-text"}>{status}</div>}
-        {!status && <div></div>}
-        <button className="btn btn-primary" onClick={saveSettings}>Save Changes</button>
-      </div>
     </div>
 
     <div className="card">
@@ -1295,6 +1290,11 @@ const renderSettings = () => (
           )}
         </div>
       </div>
+    </div>
+
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 4px" }}>
+      {status ? <div className={status.includes("✅") ? "status-text" : "error-text"}>{status}</div> : <div />}
+      <button className="btn btn-primary" onClick={saveSettings}>Save Changes</button>
     </div>
   </>
 );
