@@ -53,103 +53,60 @@ function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0a0a0f",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    }}>
+    <div className="auth-bg">
       <a href="https://askra.app" style={{
-  position: "fixed",
-  top: 20,
-  left: 24,
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  color: "#555577",
-  textDecoration: "none",
-  fontSize: 13,
-  transition: "color 0.15s"
-}}
-onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
-onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
->
-  ← Back to Askra
-</a>
-      <div style={{
-        background: "#0f0f17",
-        border: "1px solid #1e1e2e",
-        borderRadius: 12,
-        padding: "40px 36px",
-        width: "100%",
-        maxWidth: 380
-      }}>
+        position: "fixed", top: 20, left: 24,
+        display: "flex", alignItems: "center", gap: 6,
+        color: "#444466", textDecoration: "none", fontSize: 13, transition: "color 0.15s", zIndex: 10
+      }}
+        onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
+        onMouseOut={(e) => e.currentTarget.style.color = "#444466"}
+      >
+        ← Back to Askra
+      </a>
+      <div className="auth-card">
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 4 }}>
+          <div className="auth-title">
             Askra Dashboard
             <span style={{
-              fontSize: 10,
-              background: "#7c3aed22",
-              color: "#a78bfa",
-              border: "1px solid #7c3aed44",
-              padding: "2px 6px",
-              borderRadius: 4,
-              marginLeft: 8,
-              fontFamily: "monospace"
+              fontSize: 9, background: "#7c3aed1a", color: "#a78bfa",
+              border: "1px solid #7c3aed33", padding: "2px 6px", borderRadius: 4,
+              marginLeft: 8, fontFamily: "monospace", verticalAlign: "middle"
             }}>BETA</span>
           </div>
-          <div style={{ fontSize: 13, color: "#555577" }}>Sign in to your dashboard</div>
+          <div className="auth-subtitle">Sign in to your dashboard</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="form-group">
             <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="you@company.com"
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={handleKeyPress} placeholder="you@company.com" />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="••••••••"
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={handleKeyPress} placeholder="••••••••" />
           </div>
         </div>
 
         {error && <div className="error-text" style={{ marginTop: 10 }}>{error}</div>}
 
-<div style={{ textAlign: "right", marginTop: 8 }}>
-  <a href="/forgot-password" style={{ fontSize: 12, color: "#555577", textDecoration: "none" }}
-    onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
-    onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
-  >
-    Forgot password?
-  </a>
-</div>
+        <div style={{ textAlign: "right", marginTop: 8 }}>
+          <a href="/forgot-password" style={{ fontSize: 12, color: "#444466", textDecoration: "none", transition: "color 0.15s" }}
+            onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
+            onMouseOut={(e) => e.currentTarget.style.color = "#444466"}
+          >Forgot password?</a>
+        </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={handleLogin}
-          style={{ width: "100%", marginTop: 20, justifyContent: "center", padding: "10px" }}
-        >
+        <button className="btn btn-primary" onClick={handleLogin} style={{ width: "100%", marginTop: 20, padding: "11px" }}>
           Sign In
         </button>
 
-        <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577", width: "100%" }}>
-  Don't have an account?{" "}
-  <a href="/register" style={{ color: "#a78bfa", textDecoration: "none" }}>Get started free</a>
-</div>
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 13, color: "#444466" }}>
+          Don't have an account?{" "}
+          <a href="/register" style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 500 }}>Get started free</a>
+        </div>
       </div>
-  </div>
+    </div>
   );
 }
 
@@ -182,36 +139,25 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "#0f0f17", border: "1px solid #1e1e2e", borderRadius: 12, padding: "40px 36px", width: "100%", maxWidth: 380 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Reset your password</div>
-        <div style={{ fontSize: 13, color: "#555577", marginBottom: 24 }}>Enter your email and we'll send you a reset link.</div>
+    <div className="auth-bg">
+      <div className="auth-card">
+        <div className="auth-title">Reset your password</div>
+        <div className="auth-subtitle">Enter your email and we'll send you a reset link.</div>
 
         <div className="form-group" style={{ marginBottom: 16 }}>
           <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder="you@company.com"
-          />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSubmit()} placeholder="you@company.com" />
         </div>
 
         {status && <div style={{ fontSize: 13, marginBottom: 12, color: status.includes("✅") ? "#4ade80" : "#f87171" }}>{status}</div>}
 
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{ width: "100%", justifyContent: "center", padding: "10px" }}
-        >
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "11px" }}>
           {loading ? "Sending..." : "Send Reset Link"}
         </button>
 
-        <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 13, color: "#444466" }}>
           Remember it?{" "}
-          <a href="/login" style={{ color: "#a78bfa", textDecoration: "none" }}>Back to login</a>
+          <a href="/login" style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 500 }}>Back to login</a>
         </div>
       </div>
     </div>
@@ -256,40 +202,25 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "#0f0f17", border: "1px solid #1e1e2e", borderRadius: 12, padding: "40px 36px", width: "100%", maxWidth: 380 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Choose a new password</div>
-        <div style={{ fontSize: 13, color: "#555577", marginBottom: 24 }}>Must be at least 8 characters.</div>
+    <div className="auth-bg">
+      <div className="auth-card">
+        <div className="auth-title">Choose a new password</div>
+        <div className="auth-subtitle">Must be at least 8 characters.</div>
 
-        <div className="form-group" style={{ marginBottom: 12 }}>
-          <label>New Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-          />
-        </div>
-
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder="Repeat your password"
-          />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+          <div className="form-group">
+            <label>New Password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+          </div>
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSubmit()} placeholder="Repeat your password" />
+          </div>
         </div>
 
         {status && <div style={{ fontSize: 13, marginBottom: 12, color: status.includes("✅") ? "#4ade80" : "#f87171" }}>{status}</div>}
 
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{ width: "100%", justifyContent: "center", padding: "10px" }}
-        >
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: "100%", padding: "11px" }}>
           {loading ? "Resetting..." : "Reset Password"}
         </button>
       </div>
@@ -357,53 +288,28 @@ function RegisterPage() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0a0a0f",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    }}>
+    <div className="auth-bg">
       <a href="https://askra.app" style={{
-  position: "fixed",
-  top: 20,
-  left: 24,
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  color: "#555577",
-  textDecoration: "none",
-  fontSize: 13,
-  transition: "color 0.15s"
-}}
-onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
-onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
->
-  ← Back to Askra
-</a>
-      <div style={{
-        background: "#0f0f17",
-        border: "1px solid #1e1e2e",
-        borderRadius: 12,
-        padding: "40px 36px",
-        width: "100%",
-        maxWidth: 380
-      }}>
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#fff", marginBottom: 4 }}>
+        position: "fixed", top: 20, left: 24,
+        display: "flex", alignItems: "center", gap: 6,
+        color: "#444466", textDecoration: "none", fontSize: 13, transition: "color 0.15s", zIndex: 10
+      }}
+        onMouseOver={(e) => e.currentTarget.style.color = "#a78bfa"}
+        onMouseOut={(e) => e.currentTarget.style.color = "#444466"}
+      >
+        ← Back to Askra
+      </a>
+      <div className="auth-card" style={{ maxWidth: 420 }}>
+        <div style={{ marginBottom: 24 }}>
+          <div className="auth-title">
             Get started free
             <span style={{
-              fontSize: 10,
-              background: "#7c3aed22",
-              color: "#a78bfa",
-              border: "1px solid #7c3aed44",
-              padding: "2px 6px",
-              borderRadius: 4,
-              marginLeft: 8,
-              fontFamily: "monospace"
+              fontSize: 9, background: "#7c3aed1a", color: "#a78bfa",
+              border: "1px solid #7c3aed33", padding: "2px 6px", borderRadius: 4,
+              marginLeft: 8, fontFamily: "monospace", verticalAlign: "middle"
             }}>BETA</span>
           </div>
-          <div style={{ fontSize: 13, color: "#555577" }}>Create your Askra account</div>
+          <div className="auth-subtitle">Create your Askra account</div>
         </div>
 
         <div className="form-group" style={{ marginBottom: 16 }}>
@@ -502,18 +408,13 @@ onMouseOut={(e) => e.currentTarget.style.color = "#555577"}
 
         {error && <div className="error-text" style={{ marginTop: 10 }}>{error}</div>}
 
-        <button
-          className="btn btn-primary"
-          onClick={handleRegister}
-          disabled={loading}
-          style={{ width: "100%", marginTop: 20, justifyContent: "center", padding: "10px" }}
-        >
+        <button className="btn btn-primary" onClick={handleRegister} disabled={loading} style={{ width: "100%", marginTop: 20, padding: "11px" }}>
           {loading ? "Creating account..." : "Create account"}
         </button>
 
-        <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#555577" }}>
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 13, color: "#444466" }}>
           Already have an account?{" "}
-          <a href="/login" style={{ color: "#a78bfa", textDecoration: "none" }}>Sign in</a>
+          <a href="/login" style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 500 }}>Sign in</a>
         </div>
       </div>
     </div>
@@ -567,22 +468,8 @@ function OnboardingPage() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0a0a0f",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px"
-    }}>
-      <div style={{
-        background: "#0f0f17",
-        border: "1px solid #1e1e2e",
-        borderRadius: 12,
-        padding: "40px 36px",
-        width: "100%",
-        maxWidth: 560
-      }}>
+    <div className="auth-bg">
+      <div className="auth-card" style={{ maxWidth: 580 }}>
 
         {step === 1 && (
           <>
@@ -744,27 +631,27 @@ function PaidSuccessPage() {
   }, [navigate]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#0f0f17", border: "1px solid #1e1e2e", borderRadius: 12, padding: "40px 36px", width: "100%", maxWidth: 400, textAlign: "center" }}>
+    <div className="auth-bg">
+      <div className="auth-card" style={{ textAlign: "center" }}>
         {status === "loading" && (
           <>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>⏳</div>
             <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Setting up your account...</div>
-            <div style={{ fontSize: 13, color: "#555577" }}>Just a moment while we confirm your payment.</div>
+            <div style={{ fontSize: 13, color: "#444466" }}>Just a moment while we confirm your payment.</div>
           </>
         )}
         {status === "success" && (
           <>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>🎉</div>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>🎉</div>
             <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Payment successful!</div>
-            <div style={{ fontSize: 13, color: "#555577" }}>Redirecting you to onboarding...</div>
+            <div style={{ fontSize: 13, color: "#444466" }}>Redirecting you to onboarding...</div>
           </>
         )}
         {status === "error" && (
           <>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>❌</div>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>❌</div>
             <div style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Something went wrong</div>
-            <div style={{ fontSize: 13, color: "#555577", marginBottom: 20 }}>Your payment went through but we had trouble setting up your account. Please contact support.</div>
+            <div style={{ fontSize: 13, color: "#444466", marginBottom: 20 }}>Your payment went through but we had trouble setting up your account. Please contact support.</div>
             <a href="mailto:jacksonjallen26@gmail.com" className="btn btn-primary" style={{ justifyContent: "center" }}>Contact Support</a>
           </>
         )}
@@ -1100,7 +987,7 @@ const renderAdmin = () => (
       <div className="page-subtitle">Manage all companies on Askra</div>
     </div>
 
-    <div className="stats-row">
+    <div className="stats-row" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
       <div className="stat-card">
         <div className="stat-label">Total Companies</div>
         <div className="stat-value">{companies.length}</div>
@@ -1236,36 +1123,34 @@ const renderAdmin = () => (
         </div>
         <div className="stat-card">
           <div className="stat-label">Messages This Month</div>
-          <div className="stat-value">{monthlyMessages}<span style={{ fontSize: 13, color: "#555577" }}>/{limit}</span></div>
-          <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: "#1e1e2e" }}>
-            <div style={{
-              height: "100%", borderRadius: 2,
+          <div className="stat-value">{monthlyMessages}<span style={{ fontSize: 14, color: "#333355", fontWeight: 400 }}>/{limit}</span></div>
+          <div className="progress-bar-track">
+            <div className="progress-bar-fill" style={{
               width: `${usedPercent}%`,
-              background: usedPercent >= 90 ? "#f87171" : usedPercent >= 70 ? "#fbbf24" : "#4ade80",
-              transition: "width 0.3s"
+              background: usedPercent >= 90 ? "#f87171" : usedPercent >= 70 ? "#fbbf24" : "linear-gradient(90deg, #4ade80, #22d3ee)"
             }} />
           </div>
-          <div className="stat-sub" style={{ marginTop: 4 }}>{remaining} remaining</div>
+          <div className="stat-sub" style={{ marginTop: 6 }}>{remaining} remaining</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Status</div>
-          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
             <span className="badge badge-active">Active</span>
             <span className={`badge badge-${plan}`} style={
               plan === "pro" ? { background: "#0c2a3a", color: "#38bdf8", border: "1px solid #0369a144" } :
               plan === "starter" ? {} :
-              { background: "#1a1a28", color: "#888899", border: "1px solid #33334444" }
+              { background: "#16162a", color: "#666688", border: "1px solid #2a2a3e" }
             }>
               {plan.charAt(0).toUpperCase() + plan.slice(1)}
             </span>
           </div>
-          <div className="stat-sub" style={{ marginTop: 8, fontFamily: "monospace", fontSize: 10 }}>{companyId}</div>
+          <div className="stat-sub" style={{ marginTop: 8, fontFamily: "DM Mono, monospace", fontSize: 10 }}>{companyId}</div>
         </div>
       </div>
 
       <div className="card">
         <div className="card-header">
-          <div className="card-title"><div className="card-dot" style={{ background: "#10b981" }}></div>Recent Activity</div>
+          <div className="card-title"><div className="card-dot" style={{ background: "#10b981", boxShadow: "0 0 6px #10b98188" }}></div>Recent Activity</div>
         </div>
         {Object.keys(conversations).length === 0 ? (
           <div className="empty-state">No conversations yet</div>
@@ -1274,27 +1159,15 @@ const renderAdmin = () => (
             const msgs = conversations[userId];
             const last = msgs[msgs.length - 1];
             return (
-              <div key={userId} style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "10px 0",
-                borderBottom: "1px solid #1e1e2e",
-                cursor: "pointer"
-              }} onClick={() => { setActivePage("conversations"); setSelectedUser(userId); }}>
+              <div key={userId} className="activity-row" onClick={() => { setActivePage("conversations"); setSelectedUser(userId); }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: "#1e1a3a", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    fontSize: 10, color: "#a78bfa", fontFamily: "monospace"
-                  }}>{userId.slice(0, 2).toUpperCase()}</div>
+                  <div className="activity-avatar">{userId.slice(0, 2).toUpperCase()}</div>
                   <div>
-                    <div style={{ fontSize: 12, color: "#c4c4d4" }}>{userId.slice(0, 12)}...</div>
-                    <div style={{ fontSize: 11, color: "#444466" }}>{last?.message?.slice(0, 40)}...</div>
+                    <div style={{ fontSize: 12, color: "#b0b0c8", fontFamily: "DM Mono, monospace" }}>{userId.slice(0, 12)}...</div>
+                    <div style={{ fontSize: 11, color: "#444466", marginTop: 2 }}>{last?.message?.slice(0, 44)}...</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 10, color: "#333355", fontFamily: "monospace" }}>
+                <div style={{ fontSize: 10, color: "#2e2e44", fontFamily: "DM Mono, monospace", flexShrink: 0 }}>
                   {new Date(last?.timestamp).toLocaleDateString()}
                 </div>
               </div>
@@ -1541,6 +1414,7 @@ const renderSettings = () => (
                   className={`user-item ${selectedUser === userId ? "active" : ""}`}
                   onClick={() => setSelectedUser(userId)}
                 >
+                  <div className="user-item-avatar">{userId.slice(0, 2).toUpperCase()}</div>
                   <div className="user-id">{userId.slice(0, 8)}...</div>
                 </div>
               ))}
@@ -1602,34 +1476,37 @@ const renderAccount = () => (
         <div className="card-header">
           <div className="card-title"><div className="card-dot" style={{ background: "#4ade80" }}></div>Upgrade Plan</div>
         </div>
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
           {plan === "free" && (
-            <div style={{ flex: 1, minWidth: 220, padding: "16px", background: "#0a0a0f", borderRadius: 8, border: "1px solid #1e1e2e" }}>
-              <div style={{ fontSize: 13, color: "#a78bfa", fontWeight: 700, marginBottom: 4 }}>Starter</div>
-              <div style={{ fontSize: 24, color: "#c4c4d4", fontWeight: 700, marginBottom: 12 }}>$29<span style={{ fontSize: 13, color: "#555577" }}>/mo</span></div>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+            <div className="plan-card">
+              <div style={{ fontSize: 12, color: "#a78bfa", fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Starter</div>
+              <div style={{ fontSize: 26, color: "#fff", fontWeight: 700, marginBottom: 14, letterSpacing: "-1px" }}>$29<span style={{ fontSize: 13, color: "#444466", fontWeight: 400 }}>/mo</span></div>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 7, marginBottom: 18 }}>
                 {["5,000 messages/mo", "10 PDF uploads", "Full customization", "Conversation history"].map(f => (
                   <li key={f} style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ color: "#4ade80" }}>✓</span> {f}
+                    <span style={{ color: "#4ade80", fontSize: 11 }}>✓</span> {f}
                   </li>
                 ))}
               </ul>
-              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => handleUpgrade("starter")}>
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => handleUpgrade("starter")}>
                 Upgrade to Starter
               </button>
             </div>
           )}
-          <div style={{ flex: 1, minWidth: 220, padding: "16px", background: "#0a0a0f", borderRadius: 8, border: "1px solid #7c3aed44" }}>
-            <div style={{ fontSize: 13, color: "#a78bfa", fontWeight: 700, marginBottom: 4 }}>Pro</div>
-            <div style={{ fontSize: 24, color: "#c4c4d4", fontWeight: 700, marginBottom: 12 }}>$79<span style={{ fontSize: 13, color: "#555577" }}>/mo</span></div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+          <div className="plan-card featured">
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div style={{ fontSize: 12, color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>Pro</div>
+              <span style={{ fontSize: 9, background: "#7c3aed33", color: "#a78bfa", border: "1px solid #7c3aed44", padding: "1px 6px", borderRadius: 10, fontWeight: 600 }}>POPULAR</span>
+            </div>
+            <div style={{ fontSize: 26, color: "#fff", fontWeight: 700, marginBottom: 14, letterSpacing: "-1px" }}>$79<span style={{ fontSize: 13, color: "#444466", fontWeight: 400 }}>/mo</span></div>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 7, marginBottom: 18 }}>
               {["50,000 messages/mo", "75 PDF uploads", "Full customization", "Conversation history", "Priority support", "Early access to features"].map(f => (
                 <li key={f} style={{ fontSize: 12, color: "#888899", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ color: "#4ade80" }}>✓</span> {f}
+                  <span style={{ color: "#4ade80", fontSize: 11 }}>✓</span> {f}
                 </li>
               ))}
             </ul>
-            <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => handleUpgrade("pro")}>
+            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => handleUpgrade("pro")}>
               Upgrade to Pro
             </button>
           </div>
@@ -1698,18 +1575,19 @@ return (
         <div className="nav-section">
           <div className="nav-label">Main</div>
           {[
-            { id: "overview", label: "Overview" },
-            { id: "settings", label: "Bot Settings" },
-            { id: "conversations", label: "Conversations" },
-            { id: "knowledge", label: "Knowledge Base" },
-            { id: "account", label: "⚙️ Account" },
-            ...(isAdmin ? [{ id: "admin", label: "Admin" }] : [])
+            { id: "overview", label: "Overview", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
+            { id: "settings", label: "Bot Settings", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M4.93 4.93l14.14 14.14"/></svg> },
+            { id: "conversations", label: "Conversations", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
+            { id: "knowledge", label: "Knowledge Base", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
+            { id: "account", label: "Account", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+            ...(isAdmin ? [{ id: "admin", label: "Admin", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> }] : [])
           ].map(item => (
             <button
               key={item.id}
               className={`nav-item ${activePage === item.id ? "active" : ""}`}
               onClick={() => setActivePage(item.id)}
             >
+              {item.icon}
               {item.label}
             </button>
           ))}
