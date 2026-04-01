@@ -72,6 +72,12 @@ const chatLimiter = rateLimit({
   message: { reply: "Too many messages. Please wait a few minutes before trying again." }
 });
 
+const historyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: []
+});
+
 // ===============================
 // MONGODB CONNECTION
 // ===============================
@@ -113,6 +119,7 @@ const companySchema = new mongoose.Schema({
 
   // SaaS Controls
   active: { type: Boolean, default: true },
+  pending: { type: Boolean, default: false },
   plan: { type: String, default: "free" },
   role: { type: String, default: "user" },
 
@@ -262,11 +269,21 @@ app.post("/api/register", async (req, res) => {
       return res.json({ success: true, token, companyId: company.companyId, role: company.role });
     }
 
-    // Paid plan — send to Stripe first, create account in webhook
+    // Paid plan — create pending account in DB, then redirect to Stripe
+    // Never store credentials in Stripe metadata
     const hashedPassword = await bcrypt.hash(password, 10);
     const baseId = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     const suffix = Math.random().toString(36).slice(2, 7);
     const companyId = `${baseId}-${suffix}`;
+
+    await Company.create({
+      name,
+      companyId,
+      email,
+      password: hashedPassword,
+      plan: "free",
+      pending: true
+    });
 
     const priceId = plan === "starter"
       ? process.env.STRIPE_STARTER_PRICE
@@ -279,13 +296,7 @@ app.post("/api/register", async (req, res) => {
       success_url: `https://app.askra.app/paid-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://app.askra.app/register?plan=${plan}`,
       customer_email: email,
-      metadata: {
-        name,
-        email,
-        hashedPassword,
-        companyId,
-        plan
-      }
+      metadata: { companyId }
     });
 
     res.json({ success: true, checkout: true, url: session.url });
@@ -780,13 +791,17 @@ if (messageCount >= limits.messages)
 // ===============================
 // LOAD CHAT HISTORY
 // ===============================
-app.get("/history", async (req, res) => {
+app.get("/history", historyLimiter, async (req, res) => {
   const { userId, companyId } = req.query;
 
   if (!userId || !companyId)
     return res.status(400).json([]);
 
   try {
+    const company = await Company.findOne({ companyId });
+    if (!company || !company.active)
+      return res.status(403).json([]);
+
     const messages = await Chat.find({ userId, companyId })
       .sort({ timestamp: 1 });
 
@@ -983,12 +998,19 @@ app.get("/api/paid-success", async (req, res) => {
       return res.status(400).json({ error: "Missing session_id" });
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status !== "paid")
+      return res.status(402).json({ error: "Payment not completed" });
+
     const companyId = session.metadata.companyId;
 
     const company = await Company.findOne({ companyId });
 
     if (!company)
-      return res.status(404).json({ error: "Account not found yet" });
+      return res.status(404).json({ error: "Account not found" });
+
+    if (company.pending)
+      return res.status(202).json({ error: "Account setup in progress, please try again in a moment" });
 
     const token = jwt.sign(
       { companyId: company.companyId, role: company.role },
@@ -1020,7 +1042,7 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
 
   if (event.type === "checkout.session.completed") {
   const session = event.data.object;
-  const { name, email, hashedPassword, companyId, plan } = session.metadata;
+  const { companyId } = session.metadata;
 
   const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
   const priceId = lineItems.data[0].price.id;
@@ -1029,33 +1051,23 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
   if (priceId === process.env.STRIPE_STARTER_PRICE) finalPlan = "starter";
   if (priceId === process.env.STRIPE_PRO_PRICE) finalPlan = "pro";
 
-  const existingCompany = await Company.findOne({ companyId });
+  const company = await Company.findOne({ companyId });
 
-  if (existingCompany) {
-    // Existing user upgrading — just update plan and stripeCustomerId
+  if (company && company.pending) {
+    // New registration — activate the pending account
     await Company.findOneAndUpdate({ companyId }, {
       plan: finalPlan,
-      stripeCustomerId: session.customer
-    });
-    console.log(`✅ Plan upgraded to ${finalPlan} for ${companyId}`);
-  } else {
-    // New registration — create account
-    await Company.create({
-      name,
-      companyId,
-      email,
-      password: hashedPassword,
-      plan: finalPlan,
-      stripeCustomerId: session.customer
+      stripeCustomerId: session.customer,
+      pending: false
     });
 
     await resend.emails.send({
       from: "Askra <noreply@askra.app>",
-      to: email,
+      to: company.email,
       subject: "Welcome to Askra 🎉",
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #7c3aed;">Welcome to Askra, ${name}!</h2>
+          <h2 style="color: #7c3aed;">Welcome to Askra, ${company.name}!</h2>
           <p>Your payment was successful and your account is ready to go.</p>
           <ol>
             <li style="margin-bottom: 8px;">Upload a PDF with information about your business</li>
@@ -1068,7 +1080,14 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
       `
     });
 
-    console.log(`✅ Account created and welcome email sent for ${email}`);
+    console.log(`✅ Account activated and welcome email sent for ${company.email}`);
+  } else if (company) {
+    // Existing user upgrading plan
+    await Company.findOneAndUpdate({ companyId }, {
+      plan: finalPlan,
+      stripeCustomerId: session.customer
+    });
+    console.log(`✅ Plan upgraded to ${finalPlan} for ${companyId}`);
   }
 }
 
@@ -1083,10 +1102,13 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
 
   if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object;
-    const company = await Company.findOne({ stripeCustomerId: invoice.customer });
-    if (company) {
-      await Company.findOneAndUpdate({ stripeCustomerId: invoice.customer }, { plan: "free" });
-      console.log(`⬇️ Payment failed, plan downgraded to free for ${company.email}`);
+    // Only downgrade after 3 failed attempts — gives grace period for temporary card issues
+    if (invoice.attempt_count >= 3) {
+      const company = await Company.findOne({ stripeCustomerId: invoice.customer });
+      if (company) {
+        await Company.findOneAndUpdate({ stripeCustomerId: invoice.customer }, { plan: "free" });
+        console.log(`⬇️ Payment failed after ${invoice.attempt_count} attempts, plan downgraded to free for ${company.email}`);
+      }
     }
   }
 
